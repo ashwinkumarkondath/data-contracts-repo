@@ -16,7 +16,6 @@
 #Notes:
 # - This version enforces Option 1: each YAML must contain name and asset_qualified_name.
 # - It keeps robust creation/update paths and converts dict specs to YAML before calling the SDK.
-"""
 
 import os
 import sys
@@ -51,43 +50,44 @@ def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
-
 def build_spec_from_official_template(yaml_obj):
     """
     Build a minimal contract spec dict from the official Atlan template shape.
-    Requires `name` and `asset_qualified_name` to be present in yaml_obj.
-    Adds the required `kind` and `dataset` fields to satisfy the bulk API.
+    Requires `name` and `asset_qualified_name` to be present.
+    Adds required `kind` and `dataset` fields to satisfy Atlan's bulk API.
     """
     name = yaml_obj.get("name")
-    asset_qn = (yaml_obj.get("asset_qualified_name")
-                or yaml_obj.get("assetQualifiedName")
-                or yaml_obj.get("qualified_name")
-                or yaml_obj.get("qualifiedName"))
-    dataset = yaml_obj.get("dataset") or yaml_obj.get("dataset_name") or None
+    asset_qn = (
+        yaml_obj.get("asset_qualified_name")
+        or yaml_obj.get("assetQualifiedName")
+        or yaml_obj.get("qualified_name")
+        or yaml_obj.get("qualifiedName")
+    )
+    dataset = yaml_obj.get("dataset")
 
     if not name or not asset_qn:
-        raise ValueError("YAML must include both 'name' and 'asset_qualified_name'. Please update the file.")
+        raise ValueError("YAML must include both 'name' and 'asset_qualified_name'")
 
     spec = {
-        # Required by Atlan bulk API for DataContract entities
         "kind": "DataContract",
-        "dataset": dataset if dataset else name,   # include dataset (fallback to name if dataset missing)
-        # Basic metadata
+        "dataset": dataset if dataset else name,
         "name": name,
         "description": yaml_obj.get("description", ""),
-        # include both assets and assetQualifiedName to be safe across SDK versions
         "assets": [asset_qn],
         "assetQualifiedName": asset_qn,
     }
 
-    # copy safe fields if present (custom_metadata -> extra_properties, sla, expectations)
+    # Optional sections
     if "custom_metadata" in yaml_obj:
-        spec["extra_properties"] = yaml_obj.get("custom_metadata")
-    if "expectations" in yaml_obj:
-        spec["expectations"] = yaml_obj.get("expectations")
-    if "sla" in yaml_obj:
-        spec["sla"] = yaml_obj.get("sla")
+        spec["extra_properties"] = yaml_obj["custom_metadata"]
 
+    if "expectations" in yaml_obj:
+        spec["expectations"] = yaml_obj["expectations"]
+
+    if "sla" in yaml_obj:
+        spec["sla"] = yaml_obj["sla"]
+
+    # owners handled separately by principals_map, so not included here
     return spec
 
 
