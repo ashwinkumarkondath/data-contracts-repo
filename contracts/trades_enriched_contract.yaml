@@ -1,0 +1,25 @@
+name: "trades_enriched_contract"
+description: "Ensures enriched trades are of high quality"
+assets:
+- default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_enriched
+assetQualifiedName: "default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_enriched"
+dataset: trades_enriched
+data_source: my_bigquery_connection
+type: Table
+description: "Trades enriched contract: qty>0, price not null"
+expectations:
+  schema:
+    - column: trade_id
+      type: STRING
+      required: true
+    - column: qty
+      type: INTEGER
+      required: true
+    - column: price
+      type: NUMERIC
+      required: true
+sla:
+  freshness:
+    max_lag_hours: 24
+    description: "Data must be refreshed daily"
+    
