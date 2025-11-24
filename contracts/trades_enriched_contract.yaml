@@ -7,6 +7,8 @@ dataset: trades_enriched
 data_source: my_bigquery_connection
 type: Table
 description: "Trades enriched contract: qty>0, price not null"
+certification:
+  status: VERIFIED
 expectations:
   schema:
     - column: trade_id
