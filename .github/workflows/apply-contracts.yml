@@ -4,7 +4,11 @@ on:
     branches:
       - main
   workflow_dispatch:
-
+    inputs:
+      certify:
+        description: 'Set contracts to VERIFIED after apply'
+        required: false
+        default: 'false'
 jobs:
   validate:
     name: Dry-run & validate (on push)
@@ -62,7 +66,7 @@ jobs:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
         run: |
-          python scripts/apply_data_contracts.py --dir contracts --report ./apply_report.csv
+          python scripts/apply_data_contracts.py --dir contracts --report ./apply_report.csv $([ "${{ github.event.inputs.certify }}" = "true" ] && echo "--certify")
           echo "Apply report:"
           cat ./apply_report.csv
           python scripts/apply_data_contracts.py --dir contracts --report ./apply_report.csv
