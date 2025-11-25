@@ -7,7 +7,7 @@
 #  - asset_qualified_name
 
 #Usage:
-#  python apply_data_contracts.py --dir ./contracts --report ./report.csv [--dry-run]
+#  python apply_data_contracts.py --dir ./contracts --report ./report.csv [--dry-run] [--certify]
 
 #Env:
 #  ATLAN_API_KEY (or whichever env AtlanClient expects)
@@ -16,6 +16,7 @@
 #Notes:
 # - This version enforces Option 1: each YAML must contain name and asset_qualified_name.
 # - It keeps robust creation/update paths and converts dict specs to YAML before calling the SDK.
+# - Certification is performed as a separate step AFTER create/update when --certify is provided.
 
 import os
 import sys
@@ -25,6 +26,7 @@ import argparse
 import logging
 import yaml
 import time
+import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from pyatlan.client.atlan import AtlanClient
@@ -49,6 +51,7 @@ LOG = logging.getLogger("apply_contracts")
 def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
 
 def build_spec_from_official_template(yaml_obj):
     """
@@ -133,24 +136,161 @@ def _spec_to_yaml(contract_spec):
 
 
 # ---------------------
-# Create / Update
+# Versioning + Certification helpers
+# ---------------------
+
+def _add_apply_metadata_to_spec_yaml(spec_yaml: str, runner_name="github-actions"):
+    """
+    Inject tiny metadata so Atlan treats the spec as changed and creates a new version.
+    """
+    try:
+        obj = yaml.safe_load(spec_yaml) or {}
+    except Exception:
+        if isinstance(spec_yaml, dict):
+            obj = spec_yaml
+        else:
+            raise
+    obj["applied_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    obj["applied_by"] = runner_name
+    return yaml.safe_dump(obj, sort_keys=False)
+
+
+def certify_contract(client, contract_guid: str, status="VERIFIED", message="Verified via CI"):
+    """
+    Mark a contract as certified/verified. Performs a separate update call.
+    """
+    try:
+        contract = client.asset.get_by_guid(contract_guid, asset_type=DataContract)
+    except Exception:
+        try:
+            contract = client.asset.get_by_guid(contract_guid)
+        except Exception as e:
+            LOG.exception("Failed to fetch contract by guid %s: %s", contract_guid, e)
+            return False
+
+    # Try the common shapes
+    try:
+        contract.certification = {"status": status, "message": message}
+        client.asset.save(contract)
+        return True
+    except Exception:
+        pass
+    try:
+        setattr(contract, "certificateStatus", status)
+        setattr(contract, "certificateMessage", message)
+        client.asset.save(contract)
+        return True
+    except Exception as e:
+        LOG.exception("Failed to set certification on contract %s: %s", contract_guid, e)
+        return False
+
+
+def get_contract_version(client, contract_guid: str):
+    """
+    Fetch contract asset and try common fields that indicate version.
+    Returns a string or None.
+    """
+    try:
+        contract = client.asset.get_by_guid(contract_guid, asset_type=DataContract)
+    except Exception:
+        try:
+            contract = client.asset.get_by_guid(contract_guid)
+        except Exception as e:
+            LOG.debug("get_contract_version: could not fetch contract %s: %s", contract_guid, e)
+            return None
+    # try multiple attribute names
+    for attr in ["version", "dataContractVersion", "latestVersion", "contractVersion", "data_contract_version"]:
+        v = getattr(contract, attr, None)
+        if v:
+            return v
+    # fallback: inspect dict-like attributes
+    try:
+        d = contract.__dict__
+        for k in d:
+            if "version" in k.lower():
+                return d[k]
+    except Exception:
+        pass
+    return None
+
+
+# ---------------------
+# Create / Update (wrapper that injects metadata + optionally certify)
+# ---------------------
+
+def create_or_update_and_certify(client, contract_spec, asset_qualified_name, dry_run=False, force_certify=False, runner_name="github-actions"):
+    # Build YAML string first
+    if isinstance(contract_spec, str):
+        base_yaml = contract_spec
+    else:
+        base_yaml = _spec_to_yaml(contract_spec)
+
+    # inject applied_at to force version change
+    spec_yaml_with_meta = _add_apply_metadata_to_spec_yaml(base_yaml, runner_name=runner_name)
+
+    # Call the existing create/update path using the YAML string
+    result = create_or_update_contract(client, spec_yaml_with_meta, asset_qualified_name, dry_run=dry_run)
+
+    # If created/updated and certification requested, do a separate certify call
+    if result.get("status") in ("CREATED", "UPDATED") and result.get("guid") and force_certify and not dry_run:
+        ok = certify_contract(client, result["guid"], status="VERIFIED", message=f"Verified by {runner_name} on {datetime.datetime.utcnow().isoformat()}Z")
+        if ok:
+            result["message"] = (result.get("message", "") + " ; Certified VERIFIED")
+        else:
+            result["message"] = (result.get("message", "") + " ; Certification FAILED")
+
+    # Attempt to fetch and include version info
+    if result.get("guid"):
+        ver = get_contract_version(client, result.get("guid"))
+        if ver:
+            result["version"] = ver
+    return result
+
+
+# ---------------------
+# Create / Update (existing functions)
 # ---------------------
 
 def create_or_update_contract(client, contract_spec, asset_qualified_name, dry_run=False):
     if isinstance(contract_spec, dict):
         name = contract_spec.get("name")
     else:
-        name = getattr(contract_spec, "name", None)
+        # for YAML strings, attempt to parse to extract name for idempotency
+        if isinstance(contract_spec, str):
+            try:
+                parsed = yaml.safe_load(contract_spec)
+                name = parsed.get("name")
+            except Exception:
+                name = None
+        else:
+            name = getattr(contract_spec, "name", None)
 
     existing = contract_exists(client, name, asset_qualified_name)
     if existing:
         if dry_run:
             return {"status": "DRYRUN-UPDATE", "message": f"Would update existing contract {existing.guid}"}
         try:
-            desc = contract_spec.get("description") if isinstance(contract_spec, dict) else getattr(contract_spec, "description", None)
+            desc = None
+            if isinstance(contract_spec, dict):
+                desc = contract_spec.get("description")
+            else:
+                # try to parse YAML and extract description
+                try:
+                    parsed = yaml.safe_load(contract_spec) if isinstance(contract_spec, str) else None
+                    desc = parsed.get("description") if parsed else None
+                except Exception:
+                    desc = None
             if desc:
                 existing.description = desc
-            extra = contract_spec.get("extra_properties") if isinstance(contract_spec, dict) else getattr(contract_spec, "extra_properties", None)
+            extra = None
+            if isinstance(contract_spec, dict):
+                extra = contract_spec.get("extra_properties")
+            else:
+                try:
+                    parsed = yaml.safe_load(contract_spec) if isinstance(contract_spec, str) else None
+                    extra = parsed.get("extra_properties") if parsed else None
+                except Exception:
+                    extra = None
             if extra:
                 try:
                     existing.additional_attributes = extra
@@ -167,7 +307,7 @@ def create_or_update_contract(client, contract_spec, asset_qualified_name, dry_r
         # CREATE path (ensure YAML string passed to SDK)
         try:
             try:
-                spec_yaml = _spec_to_yaml(contract_spec)
+                spec_yaml = contract_spec if isinstance(contract_spec, str) else _spec_to_yaml(contract_spec)
                 contract_obj = DataContract.creator(
                     asset_qualified_name=asset_qualified_name,
                     contract_spec=spec_yaml
@@ -199,7 +339,7 @@ def create_or_update_contract(client, contract_spec, asset_qualified_name, dry_r
 # Worker
 # ---------------------
 
-def process_file(path, client, dry_run=False):
+def process_file(path, client, dry_run=False, certify=False):
     LOG.info("Processing %s", path)
     try:
         y = load_yaml(path)
@@ -213,8 +353,9 @@ def process_file(path, client, dry_run=False):
         # Build spec from the official template shape
         spec = build_spec_from_official_template(y)
 
-        result = create_or_update_contract(client, spec, asset_qn, dry_run=dry_run)
-        return {"file": path, "status": result.get("status"), "message": result.get("message"), "guid": result.get("guid")}
+        # Use wrapper that injects applied_at and optionally certifies after create/update
+        result = create_or_update_and_certify(client, spec, asset_qn, dry_run=dry_run, force_certify=certify)
+        return {"file": path, "status": result.get("status"), "message": result.get("message"), "guid": result.get("guid"), "version": result.get("version")}
     except Exception as e:
         LOG.exception("Unhandled error processing %s", path)
         return {"file": path, "status": "FAILED", "message": str(e)}
@@ -230,6 +371,7 @@ def main():
     p.add_argument("--workers", type=int, default=4, help="concurrent workers")
     p.add_argument("--report", default="report.csv")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--certify", action="store_true", help="Set certification.status=VERIFIED after create/update")
     args = p.parse_args()
 
     files = sorted(glob.glob(os.path.join(args.dir, "*.yaml")) + glob.glob(os.path.join(args.dir, "*.yml")))
@@ -239,7 +381,7 @@ def main():
 
     results = []
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futures = {ex.submit(process_file, f, client, args.dry_run): f for f in files}
+        futures = {ex.submit(process_file, f, client, args.dry_run, args.certify): f for f in files}
         for fut in as_completed(futures):
             res = fut.result()
             results.append(res)
@@ -247,10 +389,10 @@ def main():
 
     # write report
     with open(args.report, "w", newline="", encoding="utf-8") as csvf:
-        w = csv.DictWriter(csvf, fieldnames=["file", "status", "message", "guid"])
+        w = csv.DictWriter(csvf, fieldnames=["file", "status", "message", "guid", "version"])
         w.writeheader()
         for r in results:
-            w.writerow({"file": r["file"], "status": r["status"], "message": r["message"], "guid": r.get("guid")})
+            w.writerow({"file": r["file"], "status": r["status"], "message": r["message"], "guid": r.get("guid"), "version": r.get("version")})
 
     LOG.info("Completed. Report saved to %s", args.report)
 
