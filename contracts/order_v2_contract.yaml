@@ -1,37 +1,40 @@
-name: "Order_v2 - customer_orders"
+name: "Order_v2 - customer_orders" 
 description: "Ensures schema stability and quality for customer_orders table"
 assets:
-- default/bigquery/1751545061/sturdy-tuner-464808-c6/test_demo/order_v2
+  - default/bigquery/1751545061/sturdy-tuner-464808-c6/test_demo/order_v2
 assetQualifiedName: default/bigquery/1751545061/sturdy-tuner-464808-c6/test_demo/order_v2
+
 expectations:
   schema:
-  - column: order_status
-    type: STRING
-    required: true
-  - column: customerid
-    type: STRING
-    required: true
-  - column: orderid
-    type: STRING
-    required: true
+    - column: order_status
+      type: STRING
+      required: true
+    - column: customerid
+      type: STRING
+      required: true
+    - column: orderid
+      type: STRING
+      required: true
+
   quality:
-  - name: not_null_customerid
-    type: not_null
-    column: customerid
-    description: "Every order must have a customer ID"
-  - name: valid_order_status
-    type: accepted_values
-    column: order_status
-    accepted_values:
-    - PENDING
-    - CONFIRMED
-    - CANCELLED
-    description: "Order status must be one of the accepted values"
-  - name: unique_orderid
-    type: unique
-    column: orderid
-    description: "Each order ID should be unique"
+    - name: not_null_customerid
+      type: not_null
+      column: customerid
+      description: "Every order must have a customer ID"
+    - name: valid_order_status
+      type: accepted_values
+      column: order_status
+      accepted_values:
+        - PENDING
+        - CONFIRMED
+        - CANCELLED
+      description: "Order status must be one of the accepted values"
+    - name: unique_orderid
+      type: unique
+      column: orderid
+      description: "Each order ID should be unique"
+
 sla:
   freshness:
-    max_lag_hours: 24
+    max_lag_hours: 12
     description: "Data must be refreshed daily"
