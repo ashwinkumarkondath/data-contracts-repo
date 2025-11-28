@@ -2,21 +2,23 @@
 
 # apply_data_contracts.py
 
-# This script expects each contract YAML to include at minimum both:
+# This script expects each contract YAML to include at minimum:
 #  - name
-#  - asset_qualified_name
-
+#  - either:
+#       - asset_qualified_name / assetQualifiedName
+#       - OR assets: [ <asset-qualified-name>, ... ]
+#
 #Usage:
 #  python apply_data_contracts.py --dir ./contracts --report ./report.csv [--dry-run] [--certify] [--embed-certify]
-
+#
 #Env:
 #  ATLAN_API_KEY (or whichever env AtlanClient expects)
 #  ATLAN_BASE_URL
 #  (Optional) ATLAN_ADMIN_API_KEY - if present, used only for certification step
-
+#
 #Notes:
-# - This version enforces Option 1: each YAML must contain name and asset_qualified_name.
-# - It converts dict specs to YAML before calling the SDK.
+# - YAML is considered ODCS / vendor-neutral format (name, description, assets, expectations, sla, etc.).
+# - At runtime, we build an Atlan DataContract spec (kind: DataContract, template_version, dataset, status, etc.).
 # - Certification may be done either as a separate step (--certify) or embedded in the
 #   initial payload (--embed-certify). Use only one method at a time.
 
@@ -27,20 +29,23 @@ import csv
 import argparse
 import logging
 import yaml
-import time
-import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 from pyatlan.client.atlan import AtlanClient
-from pyatlan.model.assets import DataContract, Asset,Table
+from pyatlan.model.assets import DataContract, Asset, Table
+from pyatlan.errors import ApiError
+
 # DataContractSpec class location can vary across SDKs
 try:
     from pyatlan.model.contract import DataContractSpec
 except Exception:
     DataContractSpec = None
-from pyatlan.errors import ApiError
-from pyatlan.model.enums import DataContractStatus
+
+try:
+    from pyatlan.model.enums import DataContractStatus
+except Exception:
+    DataContractStatus = None
 
 # instantiate Atlan client (relies on env vars or .env if you use dotenv)
 client = AtlanClient()
@@ -57,64 +62,82 @@ def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
-def build_spec_from_official_template(yaml_obj, embed_cert=False, template_version="0.0.2"):
-    """
-    Build a minimal contract spec dict from the official Atlan template shape.
-    Requires `name` and `asset_qualified_name` to be present.
-    Adds required `kind` and `dataset` fields to satisfy Atlan's bulk API.
 
-    If embed_cert is True, the function will include a certification block in the spec
-    so the contract is created already VERIFIED (if the caller has permission).
-    """
+def build_spec_for_atlan(yaml_obj, asset_qn: str, embed_cert: bool = False, template_version: str = "0.0.2"):
+    
     name = yaml_obj.get("name")
-    asset_qn = (
+    if not name:
+        raise ValueError("YAML must include 'name'.")
+
+    # Determine asset qualified name:
+    # priority: explicit asset_qualified_name/assetQualifiedName, then argument, then assets[0]
+    asset_qn_yaml = (
         yaml_obj.get("asset_qualified_name")
         or yaml_obj.get("assetQualifiedName")
-        or yaml_obj.get("qualified_name")
-        or yaml_obj.get("qualifiedName")
+        or asset_qn
     )
-    dataset = yaml_obj.get("dataset")
+    if not asset_qn_yaml:
+        assets_list = yaml_obj.get("assets") or []
+        if isinstance(assets_list, list) and assets_list:
+            asset_qn_yaml = assets_list[0]
 
-    if not name or not asset_qn:
-        raise ValueError("YAML must include both 'name' and 'asset_qualified_name'")
+    if not asset_qn_yaml:
+        raise ValueError(
+            "Could not determine asset qualified name. "
+            "Please add 'assetQualifiedName' OR 'asset_qualified_name' or 'assets: [ ... ]' in the YAML."
+        )
+
+    # dataset: use explicit 'dataset' if present, otherwise derive from qn's last segment
+    dataset = yaml_obj.get("dataset")
+    if not dataset:
+        try:
+            dataset = asset_qn_yaml.split("/")[-1]
+        except Exception:
+            dataset = name
 
     spec = {
         "kind": "DataContract",
         "template_version": template_version,
-        "dataset": dataset if dataset else name,
+        "dataset": dataset,
         "name": name,
-        # set top-level status to 'verified' when embedding certification, else default 'draft'
         "status": ("verified" if embed_cert else yaml_obj.get("status", "draft")),
         "description": yaml_obj.get("description", ""),
-        "assets": [asset_qn],
-        "assetQualifiedName": asset_qn,
+        "assets": [asset_qn_yaml],
+        "assetQualifiedName": asset_qn_yaml,
     }
 
-    # Optional sections
-    if "custom_metadata" in yaml_obj:
-        spec["extra_properties"] = yaml_obj["custom_metadata"]
-
+    # expectations -> pass through (schema + quality)
     if "expectations" in yaml_obj:
         spec["expectations"] = yaml_obj["expectations"]
 
+    # sla -> pass through
     if "sla" in yaml_obj:
         spec["sla"] = yaml_obj["sla"]
 
+    # optional custom_metadata -> extra_properties
+    if "custom_metadata" in yaml_obj:
+        spec["extra_properties"] = yaml_obj["custom_metadata"]
+
     # If embed_cert, include certification block in the spec payload
     if embed_cert:
-        spec["certification"] = {"status": "VERIFIED", "message": "Verified by CI via embed-certify"}
+        spec["certification"] = {
+            "status": "VERIFIED",
+            "message": "Verified by CI via embed-certify (ODCS source)",
+        }
 
     return spec
 
 
 def contract_exists(client, name, asset_qn):
     try:
-        # Some SDK versions don't expose BoolQuery/TermQuery; fall back to simple search if needed
         from pyatlan.model.search import IndexSearchRequest, BoolQuery, TermQuery
-        where = BoolQuery(must=[
-            TermQuery(field="name.keyword", value=name),
-            TermQuery(field="assetQualifiedName.keyword", value=asset_qn)
-        ])
+
+        where = BoolQuery(
+            must=[
+                TermQuery(field="name.keyword", value=name),
+                TermQuery(field="assetQualifiedName.keyword", value=asset_qn),
+            ]
+        )
         req = IndexSearchRequest(where=where, dsl={"size": 3})
         res = client.asset.search(req, asset_type=DataContract)
         for r in res:
@@ -128,15 +151,21 @@ def contract_exists(client, name, asset_qn):
                 rn = getattr(r, "name", None) or getattr(r, "displayText", None)
                 aqn = None
                 try:
-                    aqn = getattr(r, "assetQualifiedName", None) or (getattr(r, "assets", [None])[0])
+                    aqn = getattr(r, "assetQualifiedName", None) or (
+                        getattr(r, "assets", [None])[0]
+                    )
                 except Exception:
                     aqn = None
-                if rn and aqn and str(rn).strip().lower() == str(name).strip().lower() and str(aqn) == str(asset_qn):
+                if (
+                    rn
+                    and aqn
+                    and str(rn).strip().lower() == str(name).strip().lower()
+                    and str(aqn) == str(asset_qn)
+                ):
                     return r
         except Exception:
             pass
     return None
-
 
 def _spec_to_yaml(contract_spec):
     # already a YAML string
@@ -198,9 +227,10 @@ def get_contract_version(contract_obj):
 
     return None
 
+
 def _add_apply_metadata_to_spec_yaml(spec_yaml: str, runner_name="github-actions"):
     """
-    Inject tiny metadata so Atlan treats the spec as changed and creates a new version.
+    Inject tiny metadata so Atlan treats the spec as changed.
     Uses timezone-aware UTC datetimes.
     """
     try:
@@ -234,7 +264,10 @@ def certify_with_client(c_client, guid, status="VERIFIED", message="Verified via
     try:
         contract.certification = {"status": status, "message": message}
         c_client.asset.save(contract)
-        LOG.info("Certification applied via client.asset.save using certification attr for guid=%s", guid)
+        LOG.info(
+            "Certification applied via client.asset.save using certification attr for guid=%s",
+            guid,
+        )
         return True
     except Exception as e:
         LOG.debug("Setting contract.certification failed: %s", e)
@@ -242,11 +275,15 @@ def certify_with_client(c_client, guid, status="VERIFIED", message="Verified via
         setattr(contract, "certificateStatus", status)
         setattr(contract, "certificateMessage", message)
         c_client.asset.save(contract)
-        LOG.info("Certification applied via certificateStatus/certificateMessage for guid=%s", guid)
+        LOG.info(
+            "Certification applied via certificateStatus/certificateMessage for guid=%s",
+            guid,
+        )
         return True
     except Exception as e:
         LOG.exception("All certification attempts failed for guid=%s: %s", guid, e)
         return False
+
 
 def get_contract_version_by_guid(client, guid):
     """
@@ -266,26 +303,40 @@ def get_contract_version_by_guid(client, guid):
 # Create / Update (wrapper that injects metadata + optionally certify)
 # ---------------------
 
-def create_or_update_and_certify(client, contract_spec, asset_qualified_name, dry_run=False, force_certify=False, runner_name="github-actions"):
+def create_or_update_and_certify(
+    client,
+    contract_spec,
+    asset_qualified_name,
+    dry_run=False,
+    force_certify=False,
+    runner_name="github-actions",
+):
     # Build YAML string first
     if isinstance(contract_spec, str):
         base_yaml = contract_spec
     else:
         base_yaml = _spec_to_yaml(contract_spec)
 
-    # inject applied_at to force version change
-    spec_yaml_with_meta = _add_apply_metadata_to_spec_yaml(base_yaml, runner_name=runner_name)
+    # inject applied_at to record change
+    spec_yaml_with_meta = _add_apply_metadata_to_spec_yaml(
+        base_yaml, runner_name=runner_name
+    )
 
     # Call the existing create/update path using the YAML string
-    result = create_or_update_contract(client, spec_yaml_with_meta, asset_qualified_name, dry_run=dry_run)
+    result = create_or_update_contract(
+        client, spec_yaml_with_meta, asset_qualified_name, dry_run=dry_run
+    )
 
     # If created/updated and certification requested, do a separate certify call
     if result.get("status") in ("CREATED", "UPDATED") and not dry_run and force_certify:
-        # try to resolve guid if missing
         guid = result.get("guid")
         if not guid:
             try:
-                parsed = yaml.safe_load(base_yaml) if isinstance(base_yaml, str) else {}
+                parsed = (
+                    yaml.safe_load(base_yaml)
+                    if isinstance(base_yaml, str)
+                    else {}
+                )
                 name = parsed.get("name")
             except Exception:
                 name = None
@@ -294,16 +345,36 @@ def create_or_update_and_certify(client, contract_spec, asset_qualified_name, dr
         if guid:
             admin_key = os.environ.get("ATLAN_ADMIN_API_KEY")
             if admin_key:
-                admin_client = AtlanClient(api_key=admin_key, base_url=os.environ.get("ATLAN_BASE_URL"))
-                ok = certify_with_client(admin_client, guid, status="VERIFIED", message=f"Verified by {runner_name} on {datetime.now(timezone.utc).isoformat()}")
+                admin_client = AtlanClient(
+                    api_key=admin_key, base_url=os.environ.get("ATLAN_BASE_URL")
+                )
+                ok = certify_with_client(
+                    admin_client,
+                    guid,
+                    status="VERIFIED",
+                    message=f"Verified by {runner_name} on {datetime.now(timezone.utc).isoformat()}",
+                )
             else:
-                ok = certify_with_client(client, guid, status="VERIFIED", message=f"Verified by {runner_name} on {datetime.now(timezone.utc).isoformat()}")
+                ok = certify_with_client(
+                    client,
+                    guid,
+                    status="VERIFIED",
+                    message=f"Verified by {runner_name} on {datetime.now(timezone.utc).isoformat()}",
+                )
             if ok:
-                result["message"] = (result.get("message", "") + " ; Certified VERIFIED")
+                result["message"] = (
+                    result.get("message", "") + " ; Certified VERIFIED"
+                )
             else:
-                result["message"] = (result.get("message", "") + " ; Certification FAILED")
+                result["message"] = (
+                    result.get("message", "") + " ; Certification FAILED"
+                )
         else:
-            LOG.error("Could not determine contract GUID for certification (name=%s asset=%s). Certification skipped.", name, asset_qualified_name)
+            LOG.error(
+                "Could not determine contract GUID for certification (name=%s asset=%s). Certification skipped.",
+                name,
+                asset_qualified_name,
+            )
 
     # Attempt to fetch and include version info
     if result.get("guid"):
@@ -313,17 +384,8 @@ def create_or_update_and_certify(client, contract_spec, asset_qualified_name, dr
     return result
 
 # ---------------------
-# Create / Update (existing functions)
+# Create / Update core
 # ---------------------
-from pyatlan.errors import ApiError
-from pyatlan.model.assets import Table, DataContract
-try:
-    from pyatlan.model.contract import DataContractSpec
-    from pyatlan.model.enums import DataContractStatus
-except Exception:
-    DataContractSpec = None
-    DataContractStatus = None
-
 
 def create_or_update_contract(
     client,
@@ -334,6 +396,7 @@ def create_or_update_contract(
 ):
     """
     Idempotent create-or-update:
+
     - If the asset has no contract yet -> create using DataContract.creator
     - If it already has a contract      -> update using DataContract.updater
     """
@@ -487,14 +550,20 @@ def _resolve_guid_quick(name, asset_qn):
     # Prefer searching via asset relationships (fast when available)
     try:
         try:
-            asset = client.asset.get_by_qualified_name(asset_qn, asset_type=Asset, ignore_relationships=False)
+            asset = client.asset.get_by_qualified_name(
+                asset_qn, asset_type=Asset, ignore_relationships=False
+            )
         except TypeError:
-            asset = client.asset.get_by_qualified_name(asset_qn, asset_type=Asset, ignore_relationships=False)
+            asset = client.asset.get_by_qualified_name(
+                asset_qn, asset_type=Asset, ignore_relationships=False
+            )
         except Exception as e:
             LOG.debug("asset fetch for quick resolution failed: %s", e)
             asset = None
         if asset:
-            latest = getattr(asset, "data_contract_latest", None) or getattr(asset, "dataContractLatest", None)
+            latest = getattr(asset, "data_contract_latest", None) or getattr(
+                asset, "dataContractLatest", None
+            )
             if latest:
                 return getattr(latest, "guid", None) or getattr(latest, "id", None)
     except Exception as e:
@@ -503,7 +572,10 @@ def _resolve_guid_quick(name, asset_qn):
     # Fallback: short search by assetQualifiedName
     try:
         from pyatlan.model.search import IndexSearchRequest, BoolQuery, TermQuery
-        where = BoolQuery(must=[TermQuery(field="assetQualifiedName.keyword", value=asset_qn)])
+
+        where = BoolQuery(
+            must=[TermQuery(field="assetQualifiedName.keyword", value=asset_qn)]
+        )
         req = IndexSearchRequest(where=where, dsl={"size": 5})
         res = client.asset.search(req, asset_type=DataContract)
         for r in res:
@@ -523,19 +595,53 @@ def process_file(path, client, dry_run=False, certify=False, embed_cert=False):
     try:
         y = load_yaml(path)
 
-        # Enforce Option 1: require name and asset_qualified_name
+        # 1) Name is mandatory in ODCS-style input
         name = y.get("name")
-        asset_qn = y.get("asset_qualified_name") or y.get("assetQualifiedName") or y.get("qualified_name") or y.get("qualifiedName")
-        if not name or not asset_qn:
-            return {"file": path, "status": "FAILED", "message": "YAML must include both 'name' and 'asset_qualified_name'. Please update the file."}
+        if not name:
+            return {
+                "file": path,
+                "status": "FAILED",
+                "message": "YAML must include 'name'. Please update the file.",
+            }
 
-        # Build spec from the official template shape
-        spec = build_spec_from_official_template(y, embed_cert=embed_cert)
+        # 2) Resolve asset qualified name in ODCS-friendly way
+        asset_qn = (
+            y.get("asset_qualified_name")
+            or y.get("assetQualifiedName")
+            or (
+                y.get("assets")[0]
+                if isinstance(y.get("assets"), list) and y["assets"]
+                else None
+            )
+        )
+        if not asset_qn:
+            return {
+                "file": path,
+                "status": "FAILED",
+                "message": (
+                    "Could not determine asset qualified name. "
+                    "Please add 'assetQualifiedName' OR 'asset_qualified_name' or 'assets: [ ... ]' in the YAML."
+                ),
+            }
 
-        # Use wrapper that injects applied_at and optionally certifies after create/update
-        # If embed_cert is True, the certification is included in the payload, so we do not request separate certify
-        result = create_or_update_and_certify(client, spec, asset_qn, dry_run=dry_run, force_certify=certify and not embed_cert)
-        return {"file": path, "status": result.get("status"), "message": result.get("message"), "guid": result.get("guid"), "version": result.get("version")}
+        # 3) Build Atlan spec from ODCS-style template
+        spec = build_spec_for_atlan(y, asset_qn=asset_qn, embed_cert=embed_cert)
+
+        # 4) Use wrapper that injects applied_at and optionally certifies after create/update
+        result = create_or_update_and_certify(
+            client,
+            spec,
+            asset_qn,
+            dry_run=dry_run,
+            force_certify=certify and not embed_cert,
+        )
+        return {
+            "file": path,
+            "status": result.get("status"),
+            "message": result.get("message"),
+            "guid": result.get("guid"),
+            "version": result.get("version"),
+        }
     except Exception as e:
         LOG.exception("Unhandled error processing %s", path)
         return {"file": path, "status": "FAILED", "message": str(e)}
@@ -550,18 +656,34 @@ def main():
     p.add_argument("--workers", type=int, default=4, help="concurrent workers")
     p.add_argument("--report", default="report.csv")
     p.add_argument("--dry-run", action="store_true")
-    p.add_argument("--certify", action="store_true", help="Set certification.status=VERIFIED after create/update (separate step)")
-    p.add_argument("--embed-certify", action="store_true", help="Embed certification in the initial create payload (useful if runner has cert privileges)")
+    p.add_argument(
+        "--certify",
+        action="store_true",
+        help="Set certification.status=VERIFIED after create/update (separate step)",
+    )
+    p.add_argument(
+        "--embed-certify",
+        action="store_true",
+        help="Embed certification in the initial create payload (useful if runner has cert privileges)",
+    )
     args = p.parse_args()
 
-    files = sorted(glob.glob(os.path.join(args.dir, "*.yaml")) + glob.glob(os.path.join(args.dir, "*.yml")))
+    files = sorted(
+        glob.glob(os.path.join(args.dir, "*.yaml"))
+        + glob.glob(os.path.join(args.dir, "*.yml"))
+    )
     if not files:
         LOG.error("No YAML files found in %s", args.dir)
         sys.exit(2)
 
     results = []
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futures = {ex.submit(process_file, f, client, args.dry_run, args.certify, args.embed_certify): f for f in files}
+        futures = {
+            ex.submit(
+                process_file, f, client, args.dry_run, args.certify, args.embed_certify
+            ): f
+            for f in files
+        }
         for fut in as_completed(futures):
             res = fut.result()
             results.append(res)
@@ -569,12 +691,23 @@ def main():
 
     # write report
     with open(args.report, "w", newline="", encoding="utf-8") as csvf:
-        w = csv.DictWriter(csvf, fieldnames=["file", "status", "message", "guid", "version"])
+        w = csv.DictWriter(
+            csvf, fieldnames=["file", "status", "message", "guid", "version"]
+        )
         w.writeheader()
         for r in results:
-            w.writerow({"file": r["file"], "status": r["status"], "message": r["message"], "guid": r.get("guid"), "version": r.get("version")})
+            w.writerow(
+                {
+                    "file": r["file"],
+                    "status": r["status"],
+                    "message": r["message"],
+                    "guid": r.get("guid"),
+                    "version": r.get("version"),
+                }
+            )
 
     LOG.info("Completed. Report saved to %s", args.report)
+
 
 if __name__ == "__main__":
     main()
