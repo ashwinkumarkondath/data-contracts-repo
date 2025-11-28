@@ -1,27 +1,62 @@
-name: "trades_enriched_contract"
+id: trades-enriched-contract
+name: trades_enriched_contract
+version: "1.0.0"
 description: "Ensures enriched trades are of high quality"
-assets:
-- default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_enriched
-assetQualifiedName: "default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_enriched"
-dataset: trades_enriched
-data_source: my_bigquery_connection
-type: Table
-description: "Trades enriched contract: qty>0, price not null"
-certification:
-  status: VERIFIED
-expectations:
-  schema:
-    - column: trade_id
-      type: STRING
-      required: true
-    - column: qty
-      type: INTEGER
-      required: true
-    - column: price
-      type: NUMERIC
-      required: true
+status: active          # e.g. proposed | draft | active | deprecated | retired
+
+terms:
+  certification:
+    status: VERIFIED     # mapped from Atlan certification.status
+
+info:
+  domain: trading
+  owner: trading-team    # fill in your actual owner
+  tags:
+    - bigquery
+    - trades
+  technicalOwner: data-engineering  # optional, if you use it
+
+references:
+  dataProducts:
+    - id: trades_enriched
+      name: trades_enriched
+      description: "Trades enriched contract: qty>0, price not null"
+      type: table
+      technology: bigquery
+      location: "projects/1763362279/datasets/trading_ds/tables/trades_enriched"
+      connection: my_bigquery_connection
+      catalogQualifiedName: "default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_enriched"
+
+schema:
+  - element: trade_id
+    type: string
+    required: true
+  - element: qty
+    type: integer
+    required: true
+  - element: price
+    type: numeric
+    required: true
+
+quality:
+  rules:
+    - id: qty-positive
+      description: "Quantity must be greater than 0"
+      dimension: validity
+      expression: "qty > 0"
+      level: row
+    - id: price-not-null
+      description: "Price must not be null"
+      dimension: completeness
+      expression: "price IS NOT NULL"
+      level: row
+
 sla:
-  freshness:
-    max_lag_hours: 24
-    description: "Data must be refreshed daily"
-    
+  objectives:
+    - id: freshness
+      description: "Data must be refreshed daily"
+      metric: max_lag_hours
+      target: 12
+      unit: h
+      appliesTo:
+        - trades_enriched
