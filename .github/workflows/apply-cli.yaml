@@ -1,0 +1,77 @@
+name: Publish contracts to Atlan (after governance approval)
+
+on:
+  workflow_dispatch: {}  # manual trigger by steward / admin
+
+env:
+  ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
+  BINARY_FILE_NAME: "atlan_Linux_amd64.tar.gz"
+
+jobs:
+  publish-contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install converter dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Convert ODCS -> Atlan contract spec
+        run: |
+          mkdir -p contracts-atlan
+          python scripts/odcs_to_atlan.py \
+            --in-dir contracts-odcs \
+            --out-dir contracts-atlan
+
+      - name: Download atlan CLI
+        run: |
+          curl -LO "$ATLAN_BINARY_URL"
+
+      - name: Uncompress CLI archive
+        run: tar -xzf "$BINARY_FILE_NAME"
+
+      - name: Install atlan CLI
+        run: |
+          sudo mv atlan /usr/local/bin/atlan
+          chmod +x /usr/local/bin/atlan
+
+      - name: Configure CLI with tenant URL
+        run: |
+          mkdir -p .atlan
+          # base config is versioned in repo if you want;
+          # here we only append the URL coming from secret
+          echo "atlan_base_url: \"${ATLAN_BASE_URL}\"" >> .atlan/config.yaml
+        env:
+          ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
+
+      - name: Validate contracts (CLI)
+        run: |
+          atlan validate contract -f "$GITHUB_WORKSPACE/contracts-atlan"
+
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      - name: Push contracts to Atlan
+        run: |
+          # either:
+          # atlan push contract -f "$GITHUB_WORKSPACE/contracts-atlan"
+          # or the shorthand "dc" (data contracts) as in docs:
+          atlan push dc -f "$GITHUB_WORKSPACE/contracts-atlan"
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      # Optional: sync certification/owners from contract → table
+      - name: Sync contract metadata to governed assets
+        run: |
+          atlan sync contract -f "$GITHUB_WORKSPACE/contracts-atlan"
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
