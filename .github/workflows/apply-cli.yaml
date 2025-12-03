@@ -37,12 +37,18 @@ jobs:
           sudo mv atlan /usr/local/bin/atlan
           chmod +x /usr/local/bin/atlan
 
-      - name: Configure CLI with tenant URL
+      - name: Configure CLI with tenant URL and data source
         run: |
           mkdir -p .atlan
-          # base config is versioned in repo if you want;
-          # here we only append the URL coming from secret
           echo "atlan_base_url: \"${ATLAN_BASE_URL}\"" >> .atlan/config.yaml
+          echo "" >> .atlan/config.yaml
+          echo "data_source my_bigquery_connection2:" >> .atlan/config.yaml
+          echo "  type: bigquery" >> .atlan/config.yaml
+          echo "  connection:" >> .atlan/config.yaml
+          echo "    name: bigquery/development" >> .atlan/config.yaml
+          echo "    qualified_name: \"default/bigquery/1751545061\"" >> .atlan/config.yaml
+          echo "  database: sturdy-tuner-464808-c6" >> .atlan/config.yaml
+          echo "  schema: sales_demo" >> .atlan/config.yaml
         env:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
 
