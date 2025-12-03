@@ -56,7 +56,7 @@ jobs:
       - name: Push contracts to Atlan
         run: |
           # either:
-          # atlan push contract -f "$GITHUB_WORKSPACE/contracts-atlan"
+          # atlan push contract -f "$GITHUB_WORKSPACE/contracts"
           # or the shorthand "dc" (data contracts) as in docs:
           atlan push dc -f "$GITHUB_WORKSPACE/contracts-atlan"
         env:
