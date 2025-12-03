@@ -22,70 +22,64 @@ expectations:
     type: date
   - column: email_subject
     type: string
+    
   quality:
   - name: unique_eventid
     type: unique
     description: Event ID must be unique
     dimension: completeness
-    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
-
-      '
+    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL'
     mustBeGreaterThan: 0
     mustBeLessThan: 3600
     severity: block
     column: eventid
+    
   - name: not_null_customerid
     type: not_null
     description: Every order must have a customer ID
     dimension: completeness
-    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
-
-      '
+    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL'
     mustBeGreaterThan: 0
     mustBeLessThan: 3600
     severity: block
     column: customerid
+    
   - name: valid_event_type
     type: valid_type
     description: Event type must be valid
     dimension: completeness
-    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
-
-      '
+    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL'
     mustBeGreaterThan: 0
     mustBeLessThan: 3600
     severity: block
     column: event_type
+    
   - name: valid_event_date
     type: valid_date
     description: Event date must be valid
     dimension: completeness
-    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
-
-      '
+    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL'
     mustBeGreaterThan: 0
     mustBeLessThan: 3600
     severity: block
     column: event_date
+    
   - name: valid_email_subject
     type: short
     description: Email Subject must be valid and short
     dimension: completeness
-    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
-
-      '
+    query: 'SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL'
     mustBeGreaterThan: 0
     mustBeLessThan: 3600
     severity: block
     column: email_subject
+    
   table_rule:
   - name: rowCount
     type: sql
     description: Ensure row count is within expected volume range
     dimension: completeness
-    query: 'SELECT COUNT(*) FROM ${object}
-
-      '
+    query: 'SELECT COUNT(*) FROM ${object}'
     mustBeGreaterThan: 10
     mustBeLessThan: 10000
     severity: alert
@@ -94,4 +88,3 @@ sla:
     property: latency
 - freshness:
     property: generalAvailability
- 
