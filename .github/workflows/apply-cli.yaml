@@ -25,13 +25,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml
 
-      - name: Convert ODCS -> Atlan contract spec
-        run: |
-          mkdir -p contracts-atlan
-          python scripts/odcs_to_atlan.py \
-            --in-dir contracts-odcs \
-            --out-dir contracts-atlan
-
       - name: Download atlan CLI
         run: |
           curl -LO "$ATLAN_BINARY_URL"
@@ -55,7 +48,7 @@ jobs:
 
       - name: Validate contracts (CLI)
         run: |
-          atlan validate contract -f "$GITHUB_WORKSPACE/contracts-atlan"
+          atlan validate contract -f "$GITHUB_WORKSPACE/contracts"
 
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
