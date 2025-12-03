@@ -1,6 +1,7 @@
 kind: DataContract
 template_version: 0.0.2
 dataset: email_events
+data_source: my_bigquery_connection2
 name: Email_events - customer_orders
 status: verified
 description: Views built on top of the seller tables.
