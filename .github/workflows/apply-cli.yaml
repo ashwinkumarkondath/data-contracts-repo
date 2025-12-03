@@ -63,8 +63,7 @@ jobs:
         run: |
           # either:
           # atlan push contract -f "$GITHUB_WORKSPACE/contracts"
-          # or the shorthand "dc" (data contracts) as in docs:
-          atlan apply dc -f "$GITHUB_WORKSPACE/contracts"
+          atlan push dc -f "$GITHUB_WORKSPACE/contracts" --force
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
