@@ -1,4 +1,4 @@
-name: Publish contracts to Atlan (after governance approval)
+name: Publish contracts to Atlan CLI
 
 on:
   workflow_dispatch: {}  # manual trigger by steward / admin
