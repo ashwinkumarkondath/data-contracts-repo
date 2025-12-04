@@ -1,0 +1,134 @@
+# Fundamentals
+apiVersion: v3.0.1 # Standard version (follows semantic versioning)
+kind: DataContract
+id: 53581432-6c55-4ba2-a65f-72344a91553a
+name: Email_events - customer_orders
+version: 3.3.0 # Version (follows semantic versioning)
+status: active
+connection_name: bigquery/development
+physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
+description: # (optional)
+  purpose: Views built on top of the seller tables. # (optional)
+  limitations: null # (optional)
+  usage: null # (optional)
+tags: ['PII'] # (optional)
+
+# Schema 
+schema:
+  - name: email_events1
+    physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
+    physicalType: table
+    description: Provides core payment metrics # (optional)
+    tags: [ 'PII' ] # (optional)
+    properties:
+      - name: eventid
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+        quality:
+        - name: unique_eventid
+          type: unique
+          description: Event ID must be unique
+          dimension: completeness
+          query: |
+            SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
+          mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          severity: block # block, quarantine, alert, ignore
+      - name: customerid
+        physicalType: string
+        primaryKey: false
+        required: false
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+        quality:
+        - name: not_null_customerid
+          type: not_null
+          description: Every order must have a customer ID
+          dimension: completeness
+          query: |
+            SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
+          mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          severity: block # block, quarantine, alert, ignore
+      - name: event_type
+        physicalType: string
+        primaryKey: false
+        required: false
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+        quality:
+        - name: valid_event_type
+          type: valid_type
+          description: Event type must be valid
+          dimension: completeness
+          query: |
+            SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
+          mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          severity: block # block, quarantine, alert, ignore
+      - name: event_date
+        physicalType: date
+        primaryKey: false
+        required: false
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+        quality:
+        - name: valid_event_date
+          type: valid_date
+          description: Event date must be valid
+          dimension: completeness
+          query: |
+            SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
+          mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          severity: block # block, quarantine, alert, ignore
+      - name: email_subject
+        physicalType: string
+        primaryKey: false
+        required: false
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+        quality:
+        - name: valid_email_subject
+          type: short
+          description: Email Subject must be valid and short
+          dimension: completeness
+          query: |
+            SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
+          mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          severity: block # block, quarantine, alert, ignore
+        # Table Quality
+    quality:
+    - name: rowCount
+      type: sql
+      description: Ensure row count is within expected volume range
+      dimension: completeness
+      query: |
+        SELECT COUNT(*) FROM ${object}
+      mustBeGreaterThan: 10
+      mustBeLessThan: 10000   
+      severity: alert # block, quarantine, alert, ignore
+
+# SLA
+slaDefaultElement: email_events.txn_ref_dt
+slaProperties:
+  - property: latency # Property, see list of values in DP QoS: https://opendataproducts.org/DataQoS-as-code/#introduction
+    value: 4
+    unit: d # d, day, days for days; y, yr, years for years
+    element: email_events.txn_ref_dt (This would not be needed as it is the same table.column as the default one)
+  - property: generalAvailability
+    value: "2022-05-12T09:30:10-08:00"
