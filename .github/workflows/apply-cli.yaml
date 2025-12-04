@@ -61,7 +61,7 @@ jobs:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
       - name: Upload validation log
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: validation-logs
           path: validation_log_*.txt 
