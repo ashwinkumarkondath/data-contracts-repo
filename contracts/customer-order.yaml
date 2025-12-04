@@ -5,7 +5,7 @@ template_version: 0.0.2
 
 # Metadata about the asset from Atlan
 dataset: order_v2 # name of the table, view or materialised view
-data_source: my_bigquery_connection
+data_source: my_bigquery_connection2
 type: Table # enum (Table, View, MaterialisedView)
 
 # Description of dataset
