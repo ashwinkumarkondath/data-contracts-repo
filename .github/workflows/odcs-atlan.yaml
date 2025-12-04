@@ -50,6 +50,7 @@ jobs:
           cp config.yaml .atlan/
           echo "atlan_base_url: \"${ATLAN_BASE_URL}\"" >> .atlan/config.yaml
           echo "" >> .atlan/config.yaml
+          cat .atlan/config.yaml
         env:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
 
@@ -69,8 +70,6 @@ jobs:
 
       - name: Push contracts to Atlan
         run: |
-          # either:
-          # atlan push contract -f "$GITHUB_WORKSPACE/data_contracts"
           atlan push contract -f "$GITHUB_WORKSPACE/data_contracts"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
