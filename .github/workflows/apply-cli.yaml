@@ -54,10 +54,17 @@ jobs:
 
       - name: Validate contracts (CLI)
         run: |
-          atlan validate contract -f "$GITHUB_WORKSPACE/contracts"
-
+          TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
+          # Run validation and capture output to a timestamped log file
+          atlan validate contract -f "$GITHUB_WORKSPACE/contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      - name: Upload validation log
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-logs
+          path: validation_log_*.txt 
 
       - name: Push contracts to Atlan
         run: |
