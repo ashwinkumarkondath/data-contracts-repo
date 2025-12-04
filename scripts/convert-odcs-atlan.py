@@ -197,7 +197,7 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
 
     # Write YAML files
     for asset_name, contract in contracts_by_asset.items():
-        output_path = os.path.join(output_dir, f"{asset_name}.yml")
+        output_path = os.path.join(output_dir, f"{asset_name}.yaml")
         with open(output_path, "w", encoding="utf-8") as f:
             yaml.dump(contract, f, sort_keys=False)
         print(f"Generated: {output_path}")
@@ -261,7 +261,7 @@ def extract_and_append_config(input_yaml_path, output_config_path='config.yaml')
     print(f"Updated config written to {output_config_path}")
 
 if __name__ == "__main__":
-    odcs = "odcs_new.yml"
+    odcs = "contracts/odcs_template.yaml"
     mapping = "mapping/mappings.json"
     extract_and_append_config(odcs)
     run(odcs, mapping)
