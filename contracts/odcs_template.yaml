@@ -15,7 +15,7 @@ tags: ['PII'] # (optional)
 
 # Schema 
 schema:
-  - name: email_events1
+  - name: email_events
     physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
     physicalType: table
     description: Provides core payment metrics # (optional)
