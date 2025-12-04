@@ -1,0 +1,122 @@
+---
+kind: DataContract
+status: verified # optional, enum (draft, verified) | default: draft
+template_version: 0.0.2
+
+# Metadata about the asset from Atlan
+dataset: order_v2 # name of the table, view or materialised view
+data_source: my_bigquery_connection
+type: Table # enum (Table, View, MaterialisedView)
+
+# Description of dataset
+description: "Ensures schema stability and quality for customer_orders table"
+
+# Owners of dataset
+owners:
+  users: [ashwin.kumar.kondath]
+  groups: [admin]
+
+# Certificate
+certification:
+  status: VERIFIED # enum (VERIFIED, DRAFT, DEPRECATED)
+  message: ""
+
+# Announcement
+announcement:
+  type: "" # enum (information, warning, issue)
+  title: ""
+  description: ""
+
+# Terms attached to a dataset
+terms: []
+tags: []
+
+# Custom metadata attached to a dataset
+custom_metadata:
+  Company Privacy:
+    Personal Data Type(s): []
+  IPR:
+    Provider: []
+  Test Metadata:
+    Salary: []
+
+# Schema of the asset
+columns:
+  - name: order_status
+    description: ""
+    data_type: STRING
+    terms: []
+    tags: []
+    custom_metadata:
+      Company Privacy:
+        Personal Data Type(s): []
+      IPR:
+        Provider: []
+      Test Metadata:
+        Salary: []
+    primary: false
+    required: true
+  - name: customerid
+    description: ""
+    data_type: STRING
+    terms: []
+    tags: []
+    custom_metadata:
+      Company Privacy:
+        Personal Data Type(s): []
+      IPR:
+        Provider: []
+      Test Metadata:
+        Salary: []
+    primary: false
+    required: true
+  - name: orderid
+    description: ""
+    data_type: STRING
+    terms: []
+    tags: []
+    custom_metadata:
+      Company Privacy:
+        Personal Data Type(s): []
+      IPR:
+        Provider: []
+      Test Metadata:
+        Salary: []
+    primary: false
+    required: true
+
+# custom entries
+
+expectations:
+  schema:
+    - column: order_status
+      type: STRING
+      required: true
+    - column: customerid
+      type: STRING
+      required: true
+    - column: orderid
+      type: STRING
+      required: true
+
+  quality:
+    - name: not_null_customerid
+      type: not_null
+      column: customerid
+      description: "Every order must have a customer ID"
+
+    - name: valid_order_status
+      type: accepted_values
+      column: order_status
+      accepted_values: ["PENDING", "CONFIRMED", "CANCELLED"]
+      description: "Order status must be one of the accepted values"   
+
+    - name: unique_orderid
+      type: unique
+      column: orderid
+      description: "Each order ID should be unique"  
+
+sla:
+  freshness:
+    max_lag_hours: 24
+    description: "Data must be refreshed daily"
