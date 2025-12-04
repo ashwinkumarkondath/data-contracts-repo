@@ -40,6 +40,7 @@ jobs:
       - name: Execute the script
         run: |
           python scripts/convert-odcs-atlan.py
+          pwd
           ls -ltr
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
