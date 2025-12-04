@@ -261,12 +261,8 @@ def extract_and_append_config(input_yaml_path, output_config_path='config.yaml')
     print(f"Updated config written to {output_config_path}")
 
 if __name__ == "__main__":
-    '''if len(sys.argv) != 3:
-        print("Usage: python conversion.py odcs_template.yaml mapping.json")
-        sys.exit(1)'''
     odcs = "odcs_new.yml"
-    mapping = "mapping_new.json"
-    #run(sys.argv[1], sys.argv[2])
+    mapping = "mapping/mappings.json"
     extract_and_append_config(odcs)
     run(odcs, mapping)
 
