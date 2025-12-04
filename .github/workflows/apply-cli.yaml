@@ -66,10 +66,3 @@ jobs:
           atlan push dc -f "$GITHUB_WORKSPACE/contracts"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
-
-      # Optional: sync certification/owners from contract → table
-      - name: Sync contract metadata to governed assets
-        run: |
-          atlan sync contract -f "$GITHUB_WORKSPACE/contracts"
-        env:
-          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
