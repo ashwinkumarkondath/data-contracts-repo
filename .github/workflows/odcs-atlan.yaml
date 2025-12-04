@@ -40,7 +40,6 @@ jobs:
       - name: Execute the script
         run: |
           python scripts/convert-odcs-atlan.py
-          cat $GITHUB_WORKSPACE/data_contracts/*.yaml
           ls -ltr
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
