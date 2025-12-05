@@ -9,8 +9,8 @@
 
     { "ODCS_Path": "description.purpose", "Atlan_Path": "description" },
 
-    { "ODCS_Path": "physicalName", "Atlan_Path": "assets[]" },
-    { "ODCS_Path": "physicalName", "Atlan_Path": "assetQualifiedName" },
+    { "ODCS_Path": "schema[].physicalName", "Atlan_Path": "assets[]" },
+    { "ODCS_Path": "schema[].physicalName", "Atlan_Path": "assetQualifiedName" },
 
     { "ODCS_Path": "schema[].physicalType", "Atlan_Path": "type" },
 
