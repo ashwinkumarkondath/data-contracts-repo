@@ -99,7 +99,86 @@ schema:
         physicalType: timestamp
         primaryKey: false
         required: true
-
+        
+  - name: data_access_test
+    physicalName: default/bigquery/1763362279/dbge-4839201756/dataset_access_test/data_access_test
+    connection_name: bigquery/bigquery-datacontract-conn
+    physicalType: table
+    description: Provides core payment metrics # (optional)
+    tags: [ 'PII' ] # (optional)
+    properties:
+      - name: name
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: email
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: phone_number
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: address
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: ssn
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: credit_card
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: age
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: department
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: employee_id
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ]
 
   - name: email_events
     physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
