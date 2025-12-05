@@ -105,7 +105,7 @@ schema:
     connection_name: bigquery/bigquery-datacontract-conn
     physicalType: table
     description: Provides core payment metrics # (optional)
-    tags: [ 'PII' ] # (optional)
+    tags: [ 'PII' ]
     properties:
       - name: name
         physicalType: string
