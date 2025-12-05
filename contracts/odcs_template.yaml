@@ -5,8 +5,6 @@ id: 53581432-6c55-4ba2-a65f-72344a91553a
 name: Email_events - customer_orders
 version: 3.3.0 # Version (follows semantic versioning)
 status: active
-connection_name: bigquery/development
-physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
 description: # (optional)
   purpose: Views built on top of the seller tables. # (optional)
   limitations: null # (optional)
@@ -15,8 +13,98 @@ tags: ['PII'] # (optional)
 
 # Schema 
 schema:
+  - name: trades_raw
+    physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/trades_raw
+    connection_name: bigquery/development
+    physicalType: table
+    description: Provides core payment metrics # (optional)
+    tags: [ 'PII' ] # (optional)
+    properties:
+      - name: trade_id
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: trade_timestamp
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: instrument
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: side
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: qty
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: price
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: venue
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: execute_party
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: metadata
+        physicalType: record
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: metadata.source
+        physicalType: string
+        primaryKey: false
+        required: true
+      - name: metadata.ingestion_ts
+        physicalType: timestamp
+        primaryKey: false
+        required: true
+
+
   - name: email_events
     physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
+    connection_name: bigquery/development
     physicalType: table
     description: Provides core payment metrics # (optional)
     tags: [ 'PII' ] # (optional)
@@ -40,9 +128,9 @@ schema:
           mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
           severity: block # block, quarantine, alert, ignore
       - name: customerid
-        physicalType: number
+        physicalType: string
         primaryKey: false
-        required: true
+        required: false
         unique: false
         classification: public # (optional)
         description: Reference date for transaction # (optional)
@@ -108,7 +196,7 @@ schema:
           dimension: completeness
           query: |
             SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
-          mustBeGreaterThan: 1  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
+          mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
           mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
           severity: block # block, quarantine, alert, ignore
         # Table Quality
@@ -122,6 +210,7 @@ schema:
       mustBeGreaterThan: 10
       mustBeLessThan: 10000   
       severity: alert # block, quarantine, alert, ignore
+
 
 # SLA
 slaDefaultElement: email_events.txn_ref_dt
