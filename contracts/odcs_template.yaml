@@ -14,8 +14,8 @@ tags: ['PII'] # (optional)
 # Schema 
 schema:
   - name: trades_raw
-    physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/trades_raw
-    connection_name: bigquery/development
+    physicalName: default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_raw
+    connection_name: bigquery/bigquery-datacontract-conn
     physicalType: table
     description: Provides core payment metrics # (optional)
     tags: [ 'PII' ] # (optional)
