@@ -40,7 +40,6 @@ jobs:
       - name: Execute the script
         run: |
           python scripts/convert-odcs-atlan.py
-          ls -ltr
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
@@ -59,6 +58,7 @@ jobs:
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
+          cat $GITHUB_WORKSPACE/data_contracts/*.yaml
           atlan validate contract -f "$GITHUB_WORKSPACE/data_contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
