@@ -169,9 +169,12 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
         schema_list = asset.get("schema", [])
         for table in schema_list:
             table_name = table.get("name", "unknown")
+            q_name = table.get("physicalName", "unknown")
+            conn_name = table.get("connection_name", "unknown")
             asset_root = {"schema": [table], **{k: v for k, v in asset.items() if k != "schema"}}
             contract = build_contract(asset_root, mappings)
             contracts_by_asset[table_name] = contract
+            extract_and_append_config(odcs, table_name, q_name, conn_name)
 
     for asset in assets:
         process_sla(asset, mappings, contracts_by_asset)
@@ -182,33 +185,27 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
             yaml.dump(contract, f, sort_keys=False)  # Custom representer strips trailing newlines
         print(f"Generated: {output_path}")
 
-def extract_and_append_config(input_yaml_path, output_config_path='config.yaml'):
-    with open(input_yaml_path, 'r') as f:
-        data = yaml.safe_load(f)
+def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, output_config_path='config.yaml'):
 
-    physical_name = data.get('physicalName', '')
-    connection_name = data.get('connection_name', '')
-    data_source = data.get('schema', [{}])[0].get('name', '')
-
-    if not physical_name or not connection_name:
+    if not q_name or not conn_name:
         print(f"Missing 'physicalName' or 'connection_name' in {input_yaml_path}")
         return
 
-    parts = physical_name.split('/')
+    parts = q_name.split('/')
     if len(parts) < 5:
-        print(f"Unexpected format for physicalName: {physical_name}")
+        print(f"Unexpected format for physicalName: {q_name}")
         return
 
     qualified_name = '/'.join(parts[:3])
     database = parts[3]
     schema = parts[4]
-    data_source_val = f"data_source {data_source}"
+    data_source_val = f"data_source {table_name}"
 
     new_entry = {
        data_source_val : {
             'type': 'bigquery',
             'connection': {
-                'name': connection_name,
+                'name': conn_name,
                 'qualified_name': qualified_name
             },
             'database': database,
@@ -230,11 +227,11 @@ def extract_and_append_config(input_yaml_path, output_config_path='config.yaml')
     with open(output_config_path, 'w') as f:
         yaml.dump(existing_config, f, default_flow_style=False)
 
-    print(f"Updated config written to {output_config_path}")
+    print(f"Updated config written to {output_config_path} for asset {table_name}")
 
 if __name__ == "__main__":
     odcs = "contracts/odcs_template.yaml"
     mapping = "mapping/mappings.json"
-    extract_and_append_config(odcs)
+
     run(odcs, mapping)
  
