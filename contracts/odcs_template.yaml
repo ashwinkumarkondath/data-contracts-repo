@@ -42,7 +42,7 @@ schema:
       - name: customerid
         physicalType: string
         primaryKey: false
-        required: false
+        required: true
         unique: false
         classification: public # (optional)
         description: Reference date for transaction # (optional)
