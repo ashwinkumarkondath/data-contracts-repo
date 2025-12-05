@@ -71,6 +71,6 @@ jobs:
 
       - name: Push contracts to Atlan
         run: |
-          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/trades_raw.yaml"
+          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
