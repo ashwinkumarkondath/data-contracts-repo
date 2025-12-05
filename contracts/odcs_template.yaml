@@ -40,7 +40,7 @@ schema:
           mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
           severity: block # block, quarantine, alert, ignore
       - name: customerid
-        physicalType: string
+        physicalType: number
         primaryKey: false
         required: true
         unique: false
