@@ -2,7 +2,6 @@
 apiVersion: v3.0.1 # Standard version (follows semantic versioning)
 kind: DataContract
 id: 53581432-6c55-4ba2-a65f-72344a91553a
-name: Email_events - customer_orders
 version: 3.3.0 # Version (follows semantic versioning)
 status: active
 description: # (optional)
