@@ -5,7 +5,7 @@
     { "ODCS_Path": "schema[].name", "Atlan_Path": "data_source"},
 
     { "ODCS_Path": "schema[].name", "Atlan_Path": "dataset" },
-    { "ODCS_Path": "status", "Atlan_Path": "status", "New_Value": {"active" : "verified", "draft" : "Draft", "inactive" : "Inactive" }, "Default_Value" : "Draft" },
+    { "ODCS_Path": "status", "Atlan_Path": "status", "New_Value": {"active" : "verified", "draft" : "draft", "inactive" : "Inactive" }, "Default_Value" : "Draft" },
 
     { "ODCS_Path": "description.purpose", "Atlan_Path": "description" },
 
