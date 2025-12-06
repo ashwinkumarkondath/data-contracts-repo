@@ -69,8 +69,17 @@ jobs:
           name: validation-logs
           path: validation_log_*.txt 
 
-      - name: Push contracts to Atlan
+      - name: Push contracts to Atlan (draft)
         run: |
           atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      - name: Publish contracts to Atlan
+        run: |
+          # Update status from draft to verified before publishing
+          find "$GITHUB_WORKSPACE/data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
+          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
