@@ -2,12 +2,20 @@ name: ODCS contracts using Atlan CLI
 
 on:
   workflow_dispatch: {}  # manual trigger by steward / admin
+  workflow_run:
+    workflows: ["Validation Workflow"]
+    types:
+      - completed
 
 env:
   ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
   BINARY_FILE_NAME: "atlan_Linux_amd64.tar.gz"
 
 jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    
   publish-contracts:
     runs-on: ubuntu-latest
 
