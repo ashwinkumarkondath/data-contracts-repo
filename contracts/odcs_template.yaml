@@ -1,4 +1,3 @@
-# Fundamentals
 apiVersion: v3.0.1 # Standard version (follows semantic versioning)
 kind: DataContract
 id: 53581432-6c55-4ba2-a65f-72344a91553a
@@ -10,7 +9,6 @@ description: # (optional)
   usage: null # (optional)
 tags: ['PII'] # (optional)
 
-# Schema 
 schema:
   - name: trades_raw
     physicalName: default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_raw
@@ -289,8 +287,6 @@ schema:
       mustBeLessThan: 10000   
       severity: alert # block, quarantine, alert, ignore
 
-
-# SLA
 slaDefaultElement: email_events.txn_ref_dt
 slaProperties:
   - property: latency # Property, see list of values in DP QoS: https://opendataproducts.org/DataQoS-as-code/#introduction
