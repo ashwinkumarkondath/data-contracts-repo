@@ -1,3 +1,4 @@
 pyyaml
 pyatlan==8.3.1
 python-dotenv
+jsonschema>=4.0
