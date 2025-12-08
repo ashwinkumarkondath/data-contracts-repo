@@ -1,16 +1,30 @@
 name: Validation Workflow
-
 on:
+  workflow_dispatch: {}
   push:
-    branches: [ main ]
-  workflow_dispatch:
-
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
-  validate:
+  run-script:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Run validation
+      
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Specify the Python version you want
+
+      - name: Install dependencies
         run: |
-          echo "Running validation..."
-          
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run script
+        run: python scripts/validate-odcs-template.py
