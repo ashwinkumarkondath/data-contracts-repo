@@ -11,11 +11,9 @@ env:
   BINARY_FILE_NAME: "atlan_Linux_amd64.tar.gz"
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
-    
   publish-contracts:
+    # Only run when "Validation Workflow" completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -65,7 +63,7 @@ jobs:
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
-          cat $GITHUB_WORKSPACE/data_contracts/*.yaml
+          cat "$GITHUB_WORKSPACE/data_contracts/"*.yaml
           atlan validate contract -f "$GITHUB_WORKSPACE/data_contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
@@ -89,4 +87,3 @@ jobs:
           atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
-
