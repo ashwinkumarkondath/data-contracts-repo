@@ -82,7 +82,7 @@
                       "mustBeLessThan": { "type": "number" },
                       "severity": {
                         "type": "string",
-                        "enum": ["blocks", "quarantine", "alert", "ignore"]
+                        "enum": ["block", "quarantine", "alert", "ignore"]
                       }
                     },
                     "required": ["name", "type", "dimension"],
