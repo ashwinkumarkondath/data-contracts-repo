@@ -1,7 +1,10 @@
 import json
 import yaml
+import sys
 from jsonschema import validate, Draft7Validator
 from jsonschema.exceptions import ValidationError
+
+
 def validate_yaml_with_schema(yaml_path: str, schema_path: str):
     # Load YAML
     with open(yaml_path, "r") as f:
@@ -23,4 +26,6 @@ def validate_yaml_with_schema(yaml_path: str, schema_path: str):
 if __name__ == "__main__":
     yaml_file = "contracts/odcs_template.yaml"
     schema_file = "mapping/yaml-validation.json"
-    validate_yaml_with_schema(yaml_file, schema_file)
+    ok = validate_yaml_with_schema(yaml_file, schema_file)
+    if not ok:
+        sys.exit(1)
