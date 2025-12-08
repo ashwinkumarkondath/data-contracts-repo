@@ -1,7 +1,6 @@
 name: ODCS contracts using Atlan CLI
 
 on:
-  workflow_dispatch: {}  # manual trigger by steward / admin
   workflow_run:
     workflows: ["Validation Workflow"]
     types:
