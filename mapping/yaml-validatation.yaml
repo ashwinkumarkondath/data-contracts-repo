@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Data Contract Schema",
+  "type": "object",
+
+  "properties": {
+    "apiVersion": { "type": "string" },
+	"kind": { "type": "string", "enum": ["DataContract"] },
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "status": { "type": "string" },
+    "dataProduct": { "type": "string" },
+    "domain": { "type": "string" },
+    "tenant": { "type": "string" },
+    "description": {
+      "type": "object",
+      "properties": {
+        "purpose": { "type": ["string", "null"] },
+        "limitations": { "type": ["string", "null"] },
+        "usage": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "team": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "role": { "type": "string" }
+        },
+        "required": ["username", "role"],
+        "additionalProperties": false
+      }
+    },
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "connection_name": { "type": "string" },
+          "physicalName": { "type": "string" },
+          "physicalType": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "physicalType": { "type": "string" },
+                "primaryKey": { "type": "boolean" },
+                "required": { "type": "boolean" },
+                "unique": { "type": "boolean" },
+                "classification": { "type": ["string", "null"] },
+                "description": { "type": ["string", "null"] },
+                "tags": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "quality": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "type": { "type": "string" },
+                      "description": { "type": "string" },
+                      "dimension": { "type": "string" },
+                      "query": { "type": "string" },
+                      "mustBeGreaterThan": { "type": "number" },
+                      "mustBeLessThan": { "type": "number" },
+                      "severity": {
+                        "type": "string",
+                        "enum": ["block", "quarantine", "alert", "ignore"]
+                      }
+                    },
+                    "required": ["name", "type", "dimension"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["name", "physicalType"],
+              "additionalProperties": false
+            }
+          },
+          "quality": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" },
+                "description": { "type": "string" },
+                "dimension": { "type": "string" },
+                "query": { "type": "string" },
+                "mustBeGreaterThan": { "type": "number" },
+                "mustBeLessThan": { "type": "number" },
+                "severity": {
+                  "type": "string",
+                  "enum": ["block", "quarantine", "alert", "ignore"]
+                }
+              },
+              "required": ["name", "type", "dimension"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["name", "physicalType"],
+        "additionalProperties": false
+      }
+    },
+    "slaDefaultElement": { "type": "string" },
+    "slaProperties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "property": { "type": "string" },
+          "value": { "type": ["string", "number"] },
+          "valueExt": { "type": ["string", "number", "null"] },
+          "unit": { "type": "string" },
+          "element": { "type": ["string", "null"] }
+        },
+        "required": ["property", "value"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "version",
+    "status",
+    "schema"
+  ],
+  "additionalProperties": false
+}
