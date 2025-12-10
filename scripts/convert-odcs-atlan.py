@@ -174,7 +174,7 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
             conn_name = table.get("connection_name", "unknown")
             asset_root = {"schema": [table], **{k: v for k, v in asset.items() if k != "schema"}}
             contract = build_contract(asset_root, mappings)
-            contracts_by_asset[table_name] = contract
+            contracts_by_asset[alias_name] = contract
             extract_and_append_config(odcs, table_name, alias_name, q_name, conn_name)
 
     for asset in assets:
@@ -183,7 +183,7 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
     for asset_name, contract in contracts_by_asset.items():
         output_path = os.path.join(output_dir, f"{asset_name}.yaml")
         with open(output_path, "w", encoding="utf-8") as f:
-            yaml.dump(contract, f, sort_keys=False)  # Custom representer strips trailing newlines
+            yaml.dump(contract, f, sort_keys=False) 
         print(f"Generated: {output_path}")
 
 def extract_and_append_config(input_yaml_path, table_name, alias_name, q_name, conn_name, output_config_path='config.yaml'):
