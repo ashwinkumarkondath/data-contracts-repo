@@ -10,7 +10,7 @@ description: # (optional)
 tags: ['PII'] # (optional)
 
 schema:
-  - name: "test invoices"
+  - name: test_invoices
     physicalName: default/custom/1752745105/TEST_DB/TEST_SCHEMA/TEST_INVOICES
     connection_name: custom/mock-dev
     physicalType: table
