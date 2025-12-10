@@ -169,12 +169,13 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
         schema_list = asset.get("schema", [])
         for table in schema_list:
             table_name = table.get("name", "unknown")
+            alias_name = table.get("alias", "unknown")
             q_name = table.get("physicalName", "unknown")
             conn_name = table.get("connection_name", "unknown")
             asset_root = {"schema": [table], **{k: v for k, v in asset.items() if k != "schema"}}
             contract = build_contract(asset_root, mappings)
             contracts_by_asset[table_name] = contract
-            extract_and_append_config(odcs, table_name, q_name, conn_name)
+            extract_and_append_config(odcs, table_name, alias_name, q_name, conn_name)
 
     for asset in assets:
         process_sla(asset, mappings, contracts_by_asset)
@@ -185,7 +186,7 @@ def run(odcs_file, mapping_file, output_dir="data_contracts"):
             yaml.dump(contract, f, sort_keys=False)  # Custom representer strips trailing newlines
         print(f"Generated: {output_path}")
 
-def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, output_config_path='config.yaml'):
+def extract_and_append_config(input_yaml_path, table_name, alias_name, q_name, conn_name, output_config_path='config.yaml'):
 
     if not q_name or not conn_name:
         print(f"Missing 'physicalName' or 'connection_name' in {input_yaml_path}")
@@ -199,7 +200,7 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
     qualified_name = '/'.join(parts[:3])
     database = parts[3]
     schema = parts[4]
-    data_source_val = f"data_source {table_name}"
+    data_source_val = f"data_source {alias_name}"
 
     new_entry = {
        data_source_val : {
