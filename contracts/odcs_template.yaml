@@ -98,6 +98,28 @@ schema:
         primaryKey: false
         required: true
         
+  - name: CUSTOMER_ACCOUNTS
+    physicalName: default/custom/1752665096/PRIVATE_BANKING/CUSTOMER_DATA/CUSTOMER_ACCOUNTS
+    connection_name: custom/custom_ash
+    physicalType: table
+    description: Custome accounts information
+    properties:
+      - name: ACCOUNT_ID
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+      - name: Customer UName
+        physicalType: varchar
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public # (optional)
+        description: Reference date for transaction # (optional)         
+        
   - name: data_access_test
     physicalName: default/bigquery/1763362279/dbge-4839201756/dataset_access_test/data_access_test
     connection_name: bigquery/bigquery-datacontract-conn
