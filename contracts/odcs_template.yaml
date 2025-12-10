@@ -186,7 +186,7 @@ schema:
     tags: [ 'PII' ] # (optional)
     properties:
       - name: eventid
-        physicalType: string
+        physicalType: numeric
         primaryKey: false
         required: true
         unique: false
