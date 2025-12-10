@@ -1,4 +1,4 @@
-name: ODCS contracts using Atlan CLI
+name: ODCS contracts using Atlan test CLI
 
 on:
   workflow_run:
