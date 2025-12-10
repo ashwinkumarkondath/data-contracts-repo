@@ -13,7 +13,7 @@ env:
 jobs:
   publish-contracts:
     # Only run when "Validation Workflow" completed successfully
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
 
     steps:
