@@ -202,7 +202,7 @@ schema:
             SELECT COUNT(*) FROM ${object} WHERE ${property} IS NOT NULL
           mustBeGreaterThan: 0  # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
           mustBeLessThan: 3600   # See supported operators here: https://bitol-io.github.io/open-data-contract-standard/v3.0.2/#valid-properties-for-operator
-          severity: blocks # block, quarantine, alert, ignore
+          severity: block # block, quarantine, alert, ignore
       - name: customerid
         physicalType: string
         primaryKey: false
