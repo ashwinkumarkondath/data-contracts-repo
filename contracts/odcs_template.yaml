@@ -11,7 +11,6 @@ tags: ['PII'] # (optional)
 
 schema:       
   - name: trades_raw
-    alias: trades_raw
     physicalName: default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_raw
     connection_name: bigquery/bigquery-datacontract-conn
     physicalType: table
@@ -100,7 +99,6 @@ schema:
         required: true
         
   - name: data_access_test
-    alias: data_access_test
     physicalName: default/bigquery/1763362279/dbge-4839201756/dataset_access_test/data_access_test
     connection_name: bigquery/bigquery-datacontract-conn
     physicalType: table
@@ -181,7 +179,6 @@ schema:
         tags: [ 'PII' ]  
       
   - name: email_events
-    alias: email_events
     physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
     connection_name: bigquery/development
     physicalType: table
