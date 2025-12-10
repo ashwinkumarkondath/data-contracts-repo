@@ -18,7 +18,7 @@ schema:
     description: Test invoces
     properties:
       - name: Confirmed Delivery Time
-        physicalType: string
+        physicalType: date
         primaryKey: false
         required: true
         unique: false
