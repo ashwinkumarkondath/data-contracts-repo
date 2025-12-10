@@ -18,7 +18,7 @@ schema:
     tags: [ 'PII' ] # (optional)
     properties:
       - name: trade_id
-        physicalType: numeric
+        physicalType: string
         primaryKey: false
         required: true
         unique: false
