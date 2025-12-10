@@ -43,6 +43,7 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
+		  "alias": { "type": "string" },	
           "connection_name": { "type": "string" },
           "physicalName": { "type": "string" },
           "physicalType": { "type": "string" },
