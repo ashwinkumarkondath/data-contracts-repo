@@ -1,0 +1,151 @@
+name: ODCS contracts using Atlan CLI
+
+on:
+  workflow_run:
+    workflows: ["Validation Workflow"]
+    types:
+      - completed
+
+env:
+  ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
+  BINARY_FILE_NAME: "atlan_Linux_amd64.tar.gz"
+
+jobs:
+  publish-contracts:
+    # Only run when "Validation Workflow" completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install converter dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Download atlan CLI
+        run: |
+          curl -LO "$ATLAN_BINARY_URL"
+
+      - name: Uncompress CLI archive
+        run: tar -xzf "$BINARY_FILE_NAME"
+
+      - name: Install atlan CLI
+        run: |
+          sudo mv atlan /usr/local/bin/atlan
+          chmod +x /usr/local/bin/atlan
+          
+      - name: Execute the script
+        run: |
+          python scripts/convert-odcs-atlan.py
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+          ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
+
+      - name: Configure CLI with tenant URL and data source
+        run: |
+          mkdir -p .atlan
+          cp config.yaml .atlan/
+          echo "atlan_base_url: \"${ATLAN_BASE_URL}\"" >> .atlan/config.yaml
+          echo "" >> .atlan/config.yaml
+          cat .atlan/config.yaml
+        env:
+          ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
+
+      - name: Validate contracts (CLI)
+        run: |
+          TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
+          # Run validation and capture output to a timestamped log file
+          cat "$GITHUB_WORKSPACE/data_contracts/"*.yaml
+          atlan validate contract -f "$GITHUB_WORKSPACE/data_contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      - name: Upload validation log
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-logs
+          path: validation_log_*.txt 
+
+      # ---------- OPTION B: HASH-BASED CHANGE DETECTION ----------
+
+      - name: Compute hash of data_contracts          
+        id: contracts-hash                            
+        run: |                                        
+          set -e
+          # Create a deterministic list of all YAML files and hash them
+          find "$GITHUB_WORKSPACE/data_contracts" -type f -name '*.yaml' -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > contracts.sha256
+          SUMMARY_HASH=$(sha256sum contracts.sha256 | cut -d' ' -f1)
+          echo "hash=$SUMMARY_HASH" >> "$GITHUB_OUTPUT"
+          echo "Current contracts hash: $SUMMARY_HASH"
+
+      - name: Download previous contracts hash artifact  
+        id: download-prev-hash                           
+        uses: dawidd6/action-download-artifact@v6       
+        with:
+          # This workflow's name
+          workflow: ODCS contracts using Atlan CLI
+          name: contracts-hash
+          path: previous-hash
+        continue-on-error: true
+
+      - name: Read previous hash                         
+        id: prev-hash                                    
+        run: |
+          if [ -f previous-hash/contracts.sha256 ]; then
+            PREV_HASH=$(sha256sum previous-hash/contracts.sha256 | cut -d' ' -f1)
+            echo "Previous contracts hash: $PREV_HASH"
+            echo "prev_hash=$PREV_HASH" >> "$GITHUB_OUTPUT"
+          else
+            echo "No previous hash found (first run or artifact missing)"
+            echo "prev_hash=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compare hashes                            
+        id: compare-hash                                 
+        run: |
+          CURR_HASH="${{ steps.contracts-hash.outputs.hash }}"
+          PREV_HASH="${{ steps.prev-hash.outputs.prev_hash }}"
+          echo "Current hash: $CURR_HASH"
+          echo "Previous hash: $PREV_HASH"
+
+          if [ -n "$PREV_HASH" ] && [ "$CURR_HASH" = "$PREV_HASH" ]; then
+            echo "No changes detected in contract definitions."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Change detected in contract definitions."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---------- ONLY PUSH IF CHANGED ----------
+
+      - name: Push contracts to Atlan (draft)
+        if: steps.compare-hash.outputs.changed == 'true' 
+        run: |
+          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      - name: Publish contracts to Atlan
+        if: steps.compare-hash.outputs.changed == 'true' 
+        run: |
+          # Update status from draft to verified before publishing
+          find "$GITHUB_WORKSPACE/data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
+          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
+        env:
+          ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      - name: Upload contracts hash artifact      
+        uses: actions/upload-artifact@v4
+        with:
+          name: contracts-hash
+          path: contracts.sha256
