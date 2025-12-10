@@ -50,7 +50,7 @@ schema:
         description: Reference date for transaction # (optional)
         tags: [ 'PII' ] # (optional)
       - name: qty
-        physicalType: string
+        physicalType: numeric
         primaryKey: false
         required: true
         unique: false
@@ -154,7 +154,7 @@ schema:
         description: Reference date for transaction # (optional)
         tags: [ 'PII' ] # (optional)
       - name: age
-        physicalType: string
+        physicalType: numeric
         primaryKey: false
         required: true
         unique: false
