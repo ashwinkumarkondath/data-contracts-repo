@@ -1,4 +1,5 @@
 name: ODCS contracts using Atlan test CLI
+
 on:
   workflow_run:
     workflows: ["Validation Workflow"]
@@ -73,7 +74,7 @@ jobs:
           name: validation-logs
           path: validation_log_*.txt 
 
-      # ---------- PER-FILE HASHING & DIFF ----------
+      # ========== PER-FILE HASHING & CHANGE DETECTION ==========
 
       - name: Compute current contract hashes
         id: compute-hashes
@@ -99,8 +100,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # IMPORTANT: this must be the WORKFLOW FILE NAME, not the display name
-          workflow: odcs-atlan-test.yaml   # <- update if your file name is different
+          # IMPORTANT: workflow FILE name (in .github/workflows), not the display name
+          workflow: odcs-atlan-test.yaml   # <--- change if your file name differs
           workflow_conclusion: success
           name: contracts-hashes
           path: previous-hash
@@ -125,15 +126,14 @@ jobs:
           # If no previous hashes, treat ALL files as changed
           if [ ! -f "$PREV_HASHES" ]; then
             echo "No previous hashes found, treating all contracts as changed."
-            awk '{print $2}' "$CURRENT_HASHES" | sed "s#^$CONTRACT_DIR/##" > changed_files.txt
+            awk '{print $2}' "$CURRENT_HASHES" > changed_files.txt
           else
             > changed_files.txt
-            # Compare each current file hash with previous
+            # Compare current vs previous hashes per full path
             while read -r curr_hash curr_path; do
               prev_hash=$(grep -F "  $curr_path" "$PREV_HASHES" | awk '{print $1}' || true)
-              rel_path="${curr_path#"$CONTRACT_DIR/"}"
               if [ "$prev_hash" != "$curr_hash" ]; then
-                echo "$rel_path" >> changed_files.txt
+                echo "$curr_path" >> changed_files.txt
               fi
             done < "$CURRENT_HASHES"
           fi
@@ -147,41 +147,47 @@ jobs:
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # ---------- ONLY PUSH CHANGED CONTRACTS (DRAFT + VERIFIED) ----------
+      # ========== PUSH ONLY CHANGED CONTRACTS (DRAFT → VERIFIED) ==========
 
-      - name: Push changed contracts to Atlan (draft + verified)
+      - name: Push changed contracts (draft then verified)
         if: steps.diff-contracts.outputs.has_changes == 'true'
         run: |
-          set -e
-          CONTRACT_DIR="$GITHUB_WORKSPACE/data_contracts"
+          set -euo pipefail
+          ATLAN_API_KEY="${ATLAN_API_KEY:?ATLAN_API_KEY not set}"
 
-          while read -r rel_path; do
-            # Skip empty lines
-            [ -z "$rel_path" ] && continue
+          echo "Changed contracts to process:"
+          cat changed_files.txt
 
-            full_path="$CONTRACT_DIR/$rel_path"
-            if [ ! -f "$full_path" ]; then
-              echo "WARNING: Skipping missing contract file: $full_path"
-              continue
-            fi
+          while IFS= read -r full_path; do
+            [ -z "$full_path" ] && continue
 
             echo "======================================="
             echo "Processing contract: $full_path"
             echo "======================================="
 
+            if [ ! -f "$full_path" ]; then
+              echo "WARNING: File not found, skipping: $full_path" >&2
+              continue
+            fi
+
             echo "Pushing DRAFT version..."
             atlan push contract -f "$full_path"
 
+            echo "Switching status: draft -> verified in file (in-place)..."
+            # Flip only a top-level 'status: draft' line
+            sed -i 's/^status:[[:space:]]*draft[[:space:]]*$/status: verified/' "$full_path"
+
             echo "Pushing VERIFIED version..."
-            tmp_file=$(mktemp /tmp/verified_XXXXXX.yaml)
-            cp "$full_path" "$tmp_file"
-            sed -i 's/status: draft/status: verified/g' "$tmp_file"
-            atlan push contract -f "$tmp_file"
-            rm -f "$tmp_file"
+            atlan push contract -f "$full_path"
+
+            echo "Reverting status: verified -> draft in file (restore original content)..."
+            sed -i 's/^status:[[:space:]]*verified[[:space:]]*$/status: draft/' "$full_path"
 
           done < changed_files.txt
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
+
+      # ========== SAVE HASHES FOR NEXT RUN ==========
 
       - name: Upload contracts hashes artifact
         uses: actions/upload-artifact@v4
