@@ -76,9 +76,9 @@ jobs:
 
       # ---------- OPTION B: HASH-BASED CHANGE DETECTION ----------
 
-      - name: Compute hash of data_contracts          
-        id: contracts-hash                            
-        run: |                                        
+            - name: Compute hash of data_contracts
+        id: contracts-hash
+        run: |
           set -e
           # Create a deterministic list of all YAML files and hash them
           find "$GITHUB_WORKSPACE/data_contracts" -type f -name '*.yaml' -print0 \
@@ -88,18 +88,22 @@ jobs:
           echo "hash=$SUMMARY_HASH" >> "$GITHUB_OUTPUT"
           echo "Current contracts hash: $SUMMARY_HASH"
 
-      - name: Download previous contracts hash artifact  
-        id: download-prev-hash                           
-        uses: dawidd6/action-download-artifact@v6       
+      - name: Download previous contracts hash artifact
+        id: download-prev-hash
+        uses: dawidd6/action-download-artifact@v6
         with:
-          # This workflow's name
-          workflow: ODCS contracts using Atlan CLI
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # IMPORTANT: this must be the WORKFLOW FILE NAME, not the display name
+          workflow: odcs-atlan-test.yaml   # <--- change if your file name is different
+          workflow_conclusion: success
           name: contracts-hash
           path: previous-hash
+          allow_forks: false
+          if_no_artifact_found: ignore
         continue-on-error: true
 
-      - name: Read previous hash                         
-        id: prev-hash                                    
+      - name: Read previous hash
+        id: prev-hash
         run: |
           if [ -f previous-hash/contracts.sha256 ]; then
             PREV_HASH=$(sha256sum previous-hash/contracts.sha256 | cut -d' ' -f1)
@@ -110,8 +114,8 @@ jobs:
             echo "prev_hash=" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Compare hashes                            
-        id: compare-hash                                 
+      - name: Compare hashes
+        id: compare-hash
         run: |
           CURR_HASH="${{ steps.contracts-hash.outputs.hash }}"
           PREV_HASH="${{ steps.prev-hash.outputs.prev_hash }}"
@@ -126,17 +130,15 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # ---------- ONLY PUSH IF CHANGED ----------
-
       - name: Push contracts to Atlan (draft)
-        if: steps.compare-hash.outputs.changed == 'true' 
+        if: steps.compare-hash.outputs.changed == 'true'
         run: |
           atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
       - name: Publish contracts to Atlan
-        if: steps.compare-hash.outputs.changed == 'true' 
+        if: steps.compare-hash.outputs.changed == 'true'
         run: |
           # Update status from draft to verified before publishing
           find "$GITHUB_WORKSPACE/data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
@@ -144,7 +146,7 @@ jobs:
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
-      - name: Upload contracts hash artifact      
+      - name: Upload contracts hash artifact
         uses: actions/upload-artifact@v4
         with:
           name: contracts-hash
