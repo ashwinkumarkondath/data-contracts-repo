@@ -9,30 +9,7 @@ description: # (optional)
   usage: null # (optional)
 tags: ['PII'] # (optional)
 
-schema:
-  - name: test invoices
-    alias: TEST_INVOICES
-    physicalName: default/custom/1752745105/TEST_DB/TEST_SCHEMA/TEST_INVOICES
-    connection_name: custom/mock-dev
-    physicalType: table
-    description: Test invoces
-    properties:
-      - name: Confirmed Delivery Time
-        physicalType: date
-        primaryKey: false
-        required: true
-        unique: false
-        classification: public
-        description: Reference date for transaction
-      - name: Customer Name
-        physicalType: string
-        primaryKey: false
-        required: true
-        unique: false
-        classification: public
-        description: Reference date for transaction # (optional)
-        tags: [ 'PII' ] # (optional)
-        
+schema:       
   - name: trades_raw
     alias: trades_raw
     physicalName: default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_raw
