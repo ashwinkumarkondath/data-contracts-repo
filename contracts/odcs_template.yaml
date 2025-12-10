@@ -10,11 +10,11 @@ description: # (optional)
 tags: ['PII'] # (optional)
 
 schema:
-  - name: test_invoices
+  - name: TEST_INVOICES
     physicalName: default/custom/1752745105/TEST_DB/TEST_SCHEMA/TEST_INVOICES
     connection_name: custom/mock-dev
     physicalType: table
-    description: Provides core payment metrics 
+    description: Test invoces
     properties:
       - name: Confirmed Delivery Time
         physicalType: string
