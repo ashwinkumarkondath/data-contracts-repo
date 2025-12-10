@@ -122,7 +122,7 @@ schema:
         description: Reference date for transaction # (optional)
         tags: [ 'PII' ] # (optional)
       - name: phone_number
-        physicalType: string
+        physicalType: numeric
         primaryKey: false
         required: true
         unique: false
