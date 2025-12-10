@@ -139,9 +139,9 @@ schema:
         tags: [ 'PII' ] # (optional)
       - name: ssn
         physicalType: string
-        primaryKey: false
+        primaryKey: true
         required: true
-        unique: false
+        unique: true
         classification: public # (optional)
         description: Reference date for transaction # (optional)
         tags: [ 'PII' ] # (optional)
