@@ -138,7 +138,7 @@ schema:
         description: Reference date for transaction # (optional)
         tags: [ 'PII' ] # (optional)
       - name: ssn
-        physicalType: string
+        physicalType: alphanumeric
         primaryKey: true
         required: true
         unique: true
