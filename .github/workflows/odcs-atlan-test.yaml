@@ -76,7 +76,7 @@ jobs:
 
       # ---------- OPTION B: HASH-BASED CHANGE DETECTION ----------
 
-            - name: Compute hash of data_contracts
+      - name: Compute hash of data_contracts
         id: contracts-hash
         run: |
           set -e
