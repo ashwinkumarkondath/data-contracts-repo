@@ -173,7 +173,7 @@ jobs:
             atlan push contract -f "$full_path"
 
             echo "Pushing VERIFIED version..."
-            tmp_file=$(mktemp)
+            tmp_file=$(mktemp /tmp/verified_XXXXXX.yaml)
             cp "$full_path" "$tmp_file"
             sed -i 's/status: draft/status: verified/g' "$tmp_file"
             atlan push contract -f "$tmp_file"
