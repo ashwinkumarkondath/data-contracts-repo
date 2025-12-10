@@ -10,6 +10,28 @@ description: # (optional)
 tags: ['PII'] # (optional)
 
 schema:
+  - name: TEST_INVOICES
+    physicalName: default/custom/1752745105/TEST_DB/TEST_SCHEMA/TEST_INVOICES
+    connection_name: custom/mock-dev
+    physicalType: table
+    description: Provides core payment metrics 
+    properties:
+      - name: Confirmed Delivery Time
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public
+        description: Reference date for transaction
+      - name: Customer Name
+        physicalType: string
+        primaryKey: false
+        required: true
+        unique: false
+        classification: public
+        description: Reference date for transaction # (optional)
+        tags: [ 'PII' ] # (optional)
+        
   - name: trades_raw
     physicalName: default/bigquery/1763362279/dbge-4839201756/trading_ds/trades_raw
     connection_name: bigquery/bigquery-datacontract-conn
@@ -176,29 +198,7 @@ schema:
         unique: false
         classification: public # (optional)
         description: Reference date for transaction # (optional)
-        tags: [ 'PII' ]
-        
-- name: TEST_INVOICES
-    physicalName: default/custom/1752745105/TEST_DB/TEST_SCHEMA/TEST_INVOICES
-    connection_name: custom/mock-dev
-    physicalType: table
-    description: Provides core payment metrics 
-    properties:
-      - name: Confirmed Delivery Time
-        physicalType: Timestamp
-        primaryKey: false
-        required: true
-        unique: false
-        classification: public # (optional)
-        description: Reference date for transaction # (optional)
-      - name: Customer Name
-        physicalType: string
-        primaryKey: false
-        required: true
-        unique: false
-        classification: public # (optional)
-        description: Reference date for transaction # (optional)
-        tags: [ 'PII' ] # (optional)
+        tags: [ 'PII' ]  
       
   - name: email_events
     physicalName: default/bigquery/1751545061/sturdy-tuner-464808-c6/sales_demo/email_events
