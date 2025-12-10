@@ -42,8 +42,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-		  "alias": { "type": "string" },	
+          "name": { "type": "string" },	
           "connection_name": { "type": "string" },
           "physicalName": { "type": "string" },
           "physicalType": { "type": "string" },
