@@ -200,7 +200,7 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
     database = parts[3]
     schema = parts[4]
     type = parts[1]
-    data_source_val = f"data_source {table_name}"
+    data_source_val = f"data_source {table_name.lower()}"
 
     new_entry = {
        data_source_val : {
