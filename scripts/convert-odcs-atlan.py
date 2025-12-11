@@ -11,6 +11,8 @@ def str_representer(dumper, data):
 yaml.add_representer(str, str_representer)
 
 def handle_case_fun(case_fun, val):
+    if case_fun is not None:
+        case_fun = case_fun.lower()
     if case_fun == 'lower':
         return val.lower()
     elif case_fun == 'upper':
