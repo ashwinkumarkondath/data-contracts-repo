@@ -10,6 +10,13 @@ def str_representer(dumper, data):
 
 yaml.add_representer(str, str_representer)
 
+def handle_case_fun(case_fun, val):
+    if case_fun == 'lower':
+        return val.lower()
+    elif case_fun == 'upper':
+        return val.upper()
+    return val
+
 def get_value(node, path):
     """Get values from a nested dict/list using path with [] notation"""
     parts = path.split(".")
@@ -72,6 +79,7 @@ def build_contract(asset, mappings):
         src_path = m["ODCS_Path"]
         dst_path = m["Atlan_Path"]
         new_val = m.get("New_Value")
+        case_fun = m.get("Case_Func")
         default_val = m.get("Default_Value")
         level = m.get("Level")
         json_index = m.get("Index")
@@ -86,6 +94,7 @@ def build_contract(asset, mappings):
                             q_copy = dict(q)
                             q_copy["column"] = col_name
                             final_val = handle_new_value(q_copy, new_val, default_val)
+                            final_val = handle_case_fun(case_fun, q_copy)
                             set_value(contract, dst_path, final_val)
             continue
 
@@ -93,6 +102,7 @@ def build_contract(asset, mappings):
             for table in asset.get("schema", []):
                 for q in table.get("quality", []):
                     final_val = handle_new_value(q, new_val, default_val)
+                    final_val = handle_case_fun(case_fun, q)
                     set_value(contract, dst_path, final_val)
             continue
 
@@ -106,10 +116,12 @@ def build_contract(asset, mappings):
             else:
                 continue
             final_val = handle_new_value(val, new_val, default_val)
+            final_val = handle_case_fun(case_fun, val)
             set_value(contract, dst_path, final_val, json_index)
         else:
             for val, odcs_idx in results:
                 final_val = handle_new_value(val, new_val, default_val)
+                final_val = handle_case_fun(case_fun, val)
                 set_value(contract, dst_path, final_val, odcs_idx)
     return contract
 
