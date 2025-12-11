@@ -94,16 +94,16 @@ def build_contract(asset, mappings):
                             q_copy = dict(q)
                             q_copy["column"] = col_name
                             final_val = handle_new_value(q_copy, new_val, default_val)
-                            final_val = handle_case_fun(case_fun, q_copy)
-                            set_value(contract, dst_path, final_val)
+                            final_val1 = handle_case_fun(case_fun, final_val)
+                            set_value(contract, dst_path, final_val1)
             continue
 
         if level == "table" and "quality" in src_path:
             for table in asset.get("schema", []):
                 for q in table.get("quality", []):
                     final_val = handle_new_value(q, new_val, default_val)
-                    final_val = handle_case_fun(case_fun, q)
-                    set_value(contract, dst_path, final_val)
+                    final_val1 = handle_case_fun(case_fun, final_val)
+                    set_value(contract, dst_path, final_val1)
             continue
 
         results = get_value(asset, src_path)
@@ -116,13 +116,13 @@ def build_contract(asset, mappings):
             else:
                 continue
             final_val = handle_new_value(val, new_val, default_val)
-            final_val = handle_case_fun(case_fun, val)
-            set_value(contract, dst_path, final_val, json_index)
+            final_val1 = handle_case_fun(case_fun, final_val)
+            set_value(contract, dst_path, final_val1, json_index)
         else:
             for val, odcs_idx in results:
                 final_val = handle_new_value(val, new_val, default_val)
-                final_val = handle_case_fun(case_fun, val)
-                set_value(contract, dst_path, final_val, odcs_idx)
+                final_val1 = handle_case_fun(case_fun, final_val)
+                set_value(contract, dst_path, final_val1, odcs_idx)
     return contract
 
 def handle_new_value(val, new_val, default_val):
