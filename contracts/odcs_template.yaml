@@ -17,7 +17,7 @@ schema:
     description: Custome accounts information
     properties:
       - name: ACCOUNT_ID
-        physicalType: string
+        physicalType: number
         primaryKey: false
         required: true
         unique: false
