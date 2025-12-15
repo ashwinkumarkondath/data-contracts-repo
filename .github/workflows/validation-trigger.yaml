@@ -1,60 +1,68 @@
 name: Validation Trigger Workflow
 
 on:
-  # Reusable workflow trigger
   workflow_call:
     inputs:
       input-path:
-        description: "Path to the ODCS YAML to validate"
+        description: "Path to ODCS YAML relative to caller repo root"
+        required: true
+        type: string
+      caller-ref:
+        description: "Ref of the caller repo to use"
         required: false
         type: string
-        default: "./contracts/sales_demo/sales_demo.yaml"
     secrets:
-      REPO_READ_TOKEN:
+      REMOTE_READ_TOKEN:
+        description: "Token to access validation repo if needed"
+        required: false
+      CALLER_REPO_TOKEN:
+        description: "Token to checkout caller repo (dc_test)"
         required: true
-
-  # Existing triggers (optional – keep only what you really need)
-  repository_dispatch:
-    types: [workflow_success]
-
-  push:
-    branches:
-      - main
-
-  pull_request:
-    branches:
-      - main
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1. Checkout THIS repository (data-contracts-repo) – where the script lives
+      - name: Checkout validation repo (data-contracts-repo)
         uses: actions/checkout@v4
+        with:
+          repository: ashwinkumarkondath/data-contracts-repo
+          # if you want to respect the @ref used in `uses: ...@main`, you can
+          # omit `ref` so it takes that automatically
+          token: ${{ secrets.REMOTE_READ_TOKEN || github.token }}
+          path: validation-repo
 
-      - name: Clone/Fetch File from Repo
+      # 2. Checkout CALLER repo (dc_test) to fetch the YAML
+      - name: Checkout caller repo (dc_test)
         uses: actions/checkout@v4
         with:
           repository: Flo891/dc_test
-          path: contracts
-          token: ${{ secrets.REPO_READ_TOKEN }}
+          ref: ${{ inputs.caller-ref || github.ref }}
+          token: ${{ secrets.CALLER_REPO_TOKEN }}
+          path: caller-repo
           sparse-checkout: |
-            sales_demo/sales_demo.yaml
+            ${{ inputs.input-path }}
 
+      # 3. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
+      # 4. Install dependencies from validation repo
       - name: Install dependencies
+        working-directory: validation-repo
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      # 5. Run validation script from validation repo, using file from caller repo
       - name: Run Python Script with Input File
+        working-directory: validation-repo
         env:
-          PYTHON_SCRIPT_INPUT_PATH: ${{ inputs.input-path }}
+          PYTHON_SCRIPT_INPUT_PATH: ../caller-repo/${{ inputs.input-path }}
         run: |
           echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"
           python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH"
