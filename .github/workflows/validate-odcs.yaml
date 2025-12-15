@@ -30,8 +30,9 @@ jobs:
       # Checkout THIS repo (validation logic)
       - name: Checkout validation repo
         uses: actions/checkout@v4
-
-      # Checkout CALLER repo (private)
+        with:
+          path: data-contracts-repo
+        
       - name: Checkout caller repo
         uses: actions/checkout@v4
         with:
