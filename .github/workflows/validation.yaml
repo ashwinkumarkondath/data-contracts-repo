@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Flo891/dc_test 
-          path: sales_demo                      
+          path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
           sparse-checkout: |
             sales_demo/sales_demo.yaml             
@@ -39,7 +39,6 @@ jobs:
           
       - name: Run Python Script with Input File
         run: |
-          # Now you can reference the file using its path relative to the root of Repo Z
-          PYTHON_SCRIPT_INPUT_PATH=./sales_demo/sales_demo.yaml
+          PYTHON_SCRIPT_INPUT_PATH=./contracts/sales_demo/sales_demo.yaml
           echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"       
           python scripts/validate-odcs-template.py $PYTHON_SCRIPT_INPUT_PATH 
