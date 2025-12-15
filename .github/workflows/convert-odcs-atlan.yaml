@@ -87,12 +87,8 @@ jobs:
         env:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
 
-      - name: Prepare local data_contracts folder
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/data_contracts
-          cp -r caller-repo/${{ inputs.input-path }}/* $GITHUB_WORKSPACE/data_contracts/
-
       - name: Validate contracts (CLI)
+        working-directory: caller-repo
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
