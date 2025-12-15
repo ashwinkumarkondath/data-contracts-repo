@@ -247,10 +247,10 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Validate a YAML file against a JSON Schema.")
-    parser.add_argument("odcs", type=str, help="Path to the YAML file to validate (e.g., datacontract.yaml)")
+    parser.add_argument("yaml_file", type=str, help="Path to the YAML file to validate (e.g., datacontract.yaml)")
     args = parser.parse_args()
     #odcs = "contracts/odcs_template.yaml"
     mapping = "mapping/mappings.json"
-    if not run(args.odcs, mapping):
+    if not run(args.yaml_file, mapping):
         exit(1)
  
