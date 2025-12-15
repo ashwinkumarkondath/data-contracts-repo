@@ -61,4 +61,4 @@ jobs:
         working-directory: data-contracts-repo
         run: |
           python scripts/validate-odcs-template.py \
-            "../${{ inputs.caller-repo }}/${{ inputs.input-path }}"
+            ../caller-repo//${{ inputs.input-path }}
