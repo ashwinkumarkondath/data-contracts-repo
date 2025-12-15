@@ -1,0 +1,56 @@
+name: Validate ODCS
+
+on:
+  workflow_call:
+    inputs:
+      input-path:
+        description: "Path to ODCS YAML relative to caller repo root"
+        required: true
+        type: string
+      caller-ref:
+        description: "Git ref of caller repo"
+        required: false
+        type: string
+    secrets:
+      CALLER_REPO_TOKEN:
+        description: "Read-only token for caller repo"
+        required: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Checkout THIS repo (validation logic)
+      - name: Checkout validation repo
+        uses: actions/checkout@v4
+
+      # Checkout CALLER repo (private)
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.caller-ref || github.ref }}
+          token: ${{ secrets.CALLER_REPO_TOKEN }}
+          path: caller
+          sparse-checkout: |
+            ${{ inputs.input-path }}
+
+      # Setup Python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # Install deps
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          [ -f requirements.txt ] && pip install -r requirements.txt
+
+      # Run validation
+      - name: Run validation
+        run: |
+          python scripts/validate-odcs-template.py \
+            "caller/${{ inputs.input-path }}"
