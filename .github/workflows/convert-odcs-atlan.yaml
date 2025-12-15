@@ -90,9 +90,9 @@ jobs:
       - name: Validate contracts (CLI)
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
-          # Run validation and capture output to a timestamped log file
-          cat "$GITHUB_WORKSPACE/caller-repo/data_contracts/"*.yaml
-          atlan validate contract -f "$GITHUB_WORKSPACE/caller-repo/data_contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
+          echo "Listing files in data_contracts:"
+          ls ../data_contracts
+          atlan validate contract -f ../data_contracts 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
