@@ -1,0 +1,60 @@
+name: Validation Trigger Workflow
+
+on:
+  # Reusable workflow trigger
+  workflow_call:
+    inputs:
+      input-path:
+        description: "Path to the ODCS YAML to validate"
+        required: false
+        type: string
+        default: "./contracts/sales_demo/sales_demo.yaml"
+    secrets:
+      REPO_READ_TOKEN:
+        required: true
+
+  # Existing triggers (optional – keep only what you really need)
+  repository_dispatch:
+    types: [workflow_success]
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone/Fetch File from Repo
+        uses: actions/checkout@v4
+        with:
+          repository: Flo891/dc_test
+          path: contracts
+          token: ${{ secrets.REPO_READ_TOKEN }}
+          sparse-checkout: |
+            sales_demo/sales_demo.yaml
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Python Script with Input File
+        env:
+          PYTHON_SCRIPT_INPUT_PATH: ${{ inputs.input-path }}
+        run: |
+          echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"
+          python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH"
