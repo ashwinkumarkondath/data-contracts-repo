@@ -20,6 +20,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Clone/Fetch File from Repo
+        uses: actions/checkout@v4
+        with:
+          repository: Flo891/dc_test 
+          path: contracts                      
+          token: ${{ secrets.REPO_READ_TOKEN }} 
+          sparse-checkout: |
+            sales_demo/sales_demo.yaml   
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -44,7 +53,8 @@ jobs:
           
       - name: Execute the script (ODCS → Atlan)
         run: |
-          python scripts/convert-odcs-atlan.py
+          PYTHON_SCRIPT_INPUT_PATH=./contracts/sales_demo/sales_demo.yaml
+          python scripts/convert-odcs-atlan.py $PYTHON_SCRIPT_INPUT_PATH
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
