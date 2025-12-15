@@ -26,8 +26,6 @@ env:
 
 jobs:
   publish-contracts:
-    # Only run when "Validation Workflow" completed successfully
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -72,7 +70,7 @@ jobs:
       - name: Execute the script
         run: |
           python scripts/convert-odcs-atlan.py\
-            ../caller-repo//${{ inputs.input-path }}
+            ../caller-repo/${{ inputs.input-path }}
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
