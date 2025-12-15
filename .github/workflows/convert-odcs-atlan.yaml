@@ -88,12 +88,11 @@ jobs:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
 
       - name: Validate contracts (CLI)
-        working-directory: data-contracts-repo
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
-          cat "$GITHUB_WORKSPACE/data_contracts/"*.yaml
-          atlan validate contract -f "$GITHUB_WORKSPACE/data_contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
+          cat "$GITHUB_WORKSPACE/caller-repo/data_contracts/"*.yaml
+          atlan validate contract -f "$GITHUB_WORKSPACE/caller-repo/data_contracts" 2>&1 | tee "validation_log_${TIMESTAMP}.txt"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
@@ -105,14 +104,14 @@ jobs:
 
       - name: Push contracts to Atlan (draft)
         run: |
-          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
+          atlan push contract -f "$GITHUB_WORKSPACE/caller-repo/data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
       - name: Publish contracts to Atlan
         run: |
           # Update status from draft to verified before publishing
-          find "$GITHUB_WORKSPACE/data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
-          atlan push contract -f "$GITHUB_WORKSPACE/data_contracts/"
+          find "$GITHUB_WORKSPACE/caller-repo/data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
+          atlan push contract -f "$GITHUB_WORKSPACE/caller-repo/data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
