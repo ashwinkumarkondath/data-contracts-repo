@@ -30,7 +30,8 @@ if __name__ == "__main__":
     parser.add_argument("yaml_file", type=str, help="Path to the YAML file to validate (e.g., datacontract.yaml)")
     args = parser.parse_args()
 #   yaml_file = "contracts/odcs_template.yaml"
-    schema_file = "mapping/yaml-validation.json"
-    ok = validate_yaml_with_schema(args.yaml_file, schema_file)
-    if not ok:
-        sys.exit(1)
+    schema_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yaml-validation.json")
+#   schema_file = "mapping/yaml-validation.json"
+    # Pass the command-line argument (YAML file) and the fixed path (Schema file)
+    if not validate_yaml_with_schema(args.yaml_file, schema_file):
+        exit(1)
