@@ -249,8 +249,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Validate a YAML file against a JSON Schema.")
     parser.add_argument("yaml_file", type=str, help="Path to the YAML file to validate (e.g., datacontract.yaml)")
     args = parser.parse_args()
-    #odcs = "contracts/odcs_template.yaml"
+    odcs = args.yaml_file
     mapping = "mapping/mappings.json"
-    if not run(args.yaml_file, mapping):
+    if not run(odcs, mapping):
         exit(1)
  
