@@ -31,7 +31,7 @@ jobs:
           repository: ashwinkumarkondath/data-contracts-repo
           # if you want to respect the @ref used in `uses: ...@main`, you can
           # omit `ref` so it takes that automatically
-          token: ${{ secrets.REPO_READ_TOKEN || github.token }}
+          token: "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"
           path: validation-repo
 
       # 2. Checkout CALLER repo (dc_test) to fetch the YAML
