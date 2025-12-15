@@ -77,6 +77,7 @@ jobs:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
 
       - name: Configure CLI with tenant URL and data source
+        working-directory: data-contracts-repo
         run: |
           mkdir -p .atlan
           cp config.yaml .atlan/
