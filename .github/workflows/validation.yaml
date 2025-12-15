@@ -17,7 +17,16 @@ jobs:
       
       - name: Checkout repository
         uses: actions/checkout@v3
-
+        
+      - name: Clone/Fetch File from Repo
+        uses: actions/checkout@v4
+        with:
+          repository: Flo891/dc_test # <-- **MUST BE THE FULL REPO A NAME**
+          path: sales_demo                       # <-- **CLONE TO A SUBDIRECTORY**
+          token: "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" # <-- **USE THE REPO A TOKEN**
+          sparse-checkout: |
+            sales_demo/sales_demo.yaml             
+    
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -26,7 +35,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Run script
-        run: python scripts/validate-odcs-template.py
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi     
+          
+      - name: Run Python Script with Input File
+        run: |
+          # Now you can reference the file using its path relative to the root of Repo Z
+          PYTHON_SCRIPT_INPUT_PATH=./sales_demo/sales_demo.yaml
+          echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"       
+          python scripts/validate-odcs-template.py  --config $PYTHON_SCRIPT_INPUT_PATH 
