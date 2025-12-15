@@ -12,7 +12,7 @@ on:
         required: false
         type: string
     secrets:
-      REMOTE_READ_TOKEN:
+      REPO_READ_TOKEN:
         description: "Token to access validation repo if needed"
         required: false
       CALLER_REPO_TOKEN:
@@ -31,7 +31,7 @@ jobs:
           repository: ashwinkumarkondath/data-contracts-repo
           # if you want to respect the @ref used in `uses: ...@main`, you can
           # omit `ref` so it takes that automatically
-          token: ${{ secrets.REMOTE_READ_TOKEN || github.token }}
+          token: ${{ secrets.REPO_READ_TOKEN || github.token }}
           path: validation-repo
 
       # 2. Checkout CALLER repo (dc_test) to fetch the YAML
