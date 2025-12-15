@@ -24,8 +24,12 @@ def validate_yaml_with_schema(yaml_path: str, schema_path: str):
     return True
 
 if __name__ == "__main__":
-    yaml_file = "contracts/odcs_template.yaml"
+    parser = argparse.ArgumentParser(description="Validate a YAML file against a JSON Schema.")
+    # Define arguments for the YAML file and the Schema file
+    parser.add_argument("yaml_file", type=str, help="Path to the YAML file to validate (e.g., datacontract.yaml)")
+    args = parser.parse_args()
+#   yaml_file = "contracts/odcs_template.yaml"
     schema_file = "mapping/yaml-validation.json"
-    ok = validate_yaml_with_schema(yaml_file, schema_file)
+    ok = validate_yaml_with_schema(args.yaml_file, schema_file)
     if not ok:
         sys.exit(1)
