@@ -68,6 +68,7 @@ jobs:
           chmod +x /usr/local/bin/atlan
           
       - name: Execute the script
+        working-directory: data-contracts-repo
         run: |
           python scripts/convert-odcs-atlan.py\
             ../caller-repo/${{ inputs.input-path }}
