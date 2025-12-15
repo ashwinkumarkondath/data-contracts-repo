@@ -21,9 +21,9 @@ jobs:
       - name: Clone/Fetch File from Repo
         uses: actions/checkout@v4
         with:
-          repository: Flo891/dc_test # <-- **MUST BE THE FULL REPO A NAME**
-          path: sales_demo                       # <-- **CLONE TO A SUBDIRECTORY**
-          token: ${{ secrets.REPO_READ_TOKEN }} # <-- **USE THE REPO A TOKEN**
+          repository: Flo891/dc_test 
+          path: sales_demo                      
+          token: ${{ secrets.REPO_READ_TOKEN }} 
           sparse-checkout: |
             sales_demo/sales_demo.yaml             
     
@@ -42,4 +42,4 @@ jobs:
           # Now you can reference the file using its path relative to the root of Repo Z
           PYTHON_SCRIPT_INPUT_PATH=./sales_demo/sales_demo.yaml
           echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"       
-          python scripts/validate-odcs-template.py  --config $PYTHON_SCRIPT_INPUT_PATH 
+          python scripts/validate-odcs-template.py $PYTHON_SCRIPT_INPUT_PATH 
