@@ -3,6 +3,10 @@ name: Validate ODCS
 on:
   workflow_call:
     inputs:
+      caller-repo:
+        description: "Full repo name of caller (owner/repo)"
+        required: true
+        type: string
       input-path:
         description: "Path to ODCS YAML relative to caller repo root"
         required: true
@@ -31,10 +35,10 @@ jobs:
       - name: Checkout caller repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository }}
+          repository: ${{ inputs.caller-repo }}
           ref: ${{ inputs.caller-ref || github.ref }}
           token: ${{ secrets.CALLER_REPO_TOKEN }}
-          path: caller
+          path: caller-repo
           sparse-checkout: |
             ${{ inputs.input-path }}
 
@@ -53,4 +57,4 @@ jobs:
       - name: Run validation
         run: |
           python scripts/validate-odcs-template.py \
-            "caller/${{ inputs.input-path }}"
+            "caller-repo/${{ inputs.input-path }}"
