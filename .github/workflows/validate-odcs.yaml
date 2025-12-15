@@ -55,6 +55,7 @@ jobs:
 
       # Run validation
       - name: Run validation
+        working-directory: data-contracts-repo
         run: |
           python scripts/validate-odcs-template.py \
             "caller-repo/${{ inputs.input-path }}"
