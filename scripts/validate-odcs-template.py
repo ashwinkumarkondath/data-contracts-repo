@@ -1,6 +1,7 @@
 import json
 import yaml
 import sys
+import os
 import argparse
 from jsonschema import validate, Draft7Validator
 from jsonschema.exceptions import ValidationError
