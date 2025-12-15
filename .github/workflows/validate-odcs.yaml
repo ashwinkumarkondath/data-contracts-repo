@@ -31,6 +31,7 @@ jobs:
       - name: Checkout validation repo
         uses: actions/checkout@v4
         with:
+          repository: ashwinkumarkondath/data-contracts-repo
           path: data-contracts-repo
         
       - name: Checkout caller repo
