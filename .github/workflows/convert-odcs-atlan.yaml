@@ -87,8 +87,13 @@ jobs:
         env:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
 
+      - name: Prepare local data_contracts folder
+        working-directory: $GITHUB_WORKSPACE  # This is where your data_contracts folder should go
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/data_contracts
+          cp -r caller-repo/odcs/* $GITHUB_WORKSPACE/data_contracts/
+
       - name: Validate contracts (CLI)
-        working-directory: data_contract_test
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
