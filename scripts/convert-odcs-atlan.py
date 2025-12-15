@@ -251,6 +251,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     odcs = args.yaml_file
     mapping = "mapping/mappings.json"
-    if not run(odcs, mapping):
-        exit(1)
+    run(odcs, mapping)
  
