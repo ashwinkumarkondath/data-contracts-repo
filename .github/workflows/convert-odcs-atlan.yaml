@@ -1,10 +1,24 @@
 name: ODCS contracts using Atlan CLI
 
 on:
-  workflow_run:
-    workflows: ["Validate ODCS"]
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      caller-repo:
+        description: "Full repo name of caller (owner/repo)"
+        required: true
+        type: string
+      input-path:
+        description: "Path to ODCS YAML relative to caller repo root"
+        required: true
+        type: string
+      caller-ref:
+        description: "Git ref of caller repo"
+        required: false
+        type: string
+    secrets:
+      CALLER_REPO_TOKEN:
+        description: "Read-only token for caller repo"
+        required: true
 
 env:
   ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
@@ -17,8 +31,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout validation repo
         uses: actions/checkout@v4
+        with:
+          repository: ashwinkumarkondath/data-contracts-repo
+          path: data-contracts-repo
+        
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.caller-repo }}
+          ref: ${{ inputs.caller-ref || github.ref }}
+          token: ${{ secrets.CALLER_REPO_TOKEN }}
+          path: caller-repo
+          sparse-checkout: |
+            ${{ inputs.input-path }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,7 +71,8 @@ jobs:
           
       - name: Execute the script
         run: |
-          python scripts/convert-odcs-atlan.py
+          python scripts/convert-odcs-atlan.py\
+            ../caller-repo//${{ inputs.input-path }}
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
