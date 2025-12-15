@@ -23,7 +23,7 @@ jobs:
         with:
           repository: Flo891/dc_test # <-- **MUST BE THE FULL REPO A NAME**
           path: sales_demo                       # <-- **CLONE TO A SUBDIRECTORY**
-          token: "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" # <-- **USE THE REPO A TOKEN**
+          token: ${{ secrets.REPO_READ_TOKEN }} # <-- **USE THE REPO A TOKEN**
           sparse-checkout: |
             sales_demo/sales_demo.yaml             
     
