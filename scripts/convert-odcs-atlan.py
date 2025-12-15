@@ -1,6 +1,7 @@
 import yaml
 import json
 import os
+import argparse
 import sys
 
 def str_representer(dumper, data):
@@ -245,8 +246,11 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
     print(f"Updated config written to {output_config_path} for asset {table_name}")
 
 if __name__ == "__main__":
-    odcs = "contracts/odcs_template.yaml"
+    parser = argparse.ArgumentParser(description="Validate a YAML file against a JSON Schema.")
+    parser.add_argument("odcs", type=str, help="Path to the YAML file to validate (e.g., datacontract.yaml)")
+    args = parser.parse_args()
+    #odcs = "contracts/odcs_template.yaml"
     mapping = "mapping/mappings.json"
-
-    run(odcs, mapping)
+    if not run(args.odcs, mapping):
+        exit(1)
  
