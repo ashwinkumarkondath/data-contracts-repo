@@ -78,6 +78,7 @@ jobs:
           CONFIG_FILE: config.yaml
 
       - name: Configure CLI with tenant URL and data source
+        working-directory: data-contracts-repo
         run: |
           mkdir -p .atlan
           cp $CONFIG_FILE .atlan/config.yaml
