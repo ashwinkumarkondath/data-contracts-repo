@@ -75,21 +75,23 @@ jobs:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
           OUTPUT_DIR: ${{ github.workspace }}/data_contracts
-          CONFIG_FILE: ${{ github.workspace }}/data-contracts-repo/config.yaml
+          CONFIG_FILE: ${{ github.workspace }}/config.yaml
 
       - name: Configure CLI with tenant URL and data source
-        working-directory: data-contracts-repo
+        working-directory: $GITHUB_WORKSPACE
         run: |
           mkdir -p .atlan
-          cp config.yaml .atlan/
+          cp $CONFIG_FILE .atlan/
           echo "atlan_base_url: \"${ATLAN_BASE_URL}\"" >> .atlan/config.yaml
           echo "" >> .atlan/config.yaml
           cat .atlan/config.yaml
         env:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
+          CONFIG_FILE: ${{ github.workspace }}/config.yaml
 
 
       - name: Validate contracts (CLI)
+        working-directory: $GITHUB_WORKSPACE
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
