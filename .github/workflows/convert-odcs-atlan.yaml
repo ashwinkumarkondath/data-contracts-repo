@@ -19,6 +19,13 @@ on:
       CALLER_REPO_TOKEN:
         description: "Read-only token for caller repo"
         required: true
+      ATLAN_BASE_URL:
+        description: "Read-only token for caller repo"
+        required: true
+      ATLAN_API_KEY:
+        description: "Read-only token for caller repo"
+        required: true
+      
 
 env:
   ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
