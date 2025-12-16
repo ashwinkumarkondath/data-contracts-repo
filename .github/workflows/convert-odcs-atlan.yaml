@@ -81,7 +81,7 @@ jobs:
         working-directory: data-contracts-repo
         run: |
           mkdir -p .atlan
-          cp config.yaml .atlan/
+          cp $CONFIG_FILE .atlan/config.yaml
           echo "atlan_base_url: \"${ATLAN_BASE_URL}\"" >> .atlan/config.yaml
           echo "" >> .atlan/config.yaml
           cat .atlan/config.yaml
