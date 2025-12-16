@@ -113,6 +113,7 @@ jobs:
           path: validation_log_*.txt 
 
       - name: Push contracts to Atlan (draft)
+        working-directory: data-contracts-repo
         run: |
           atlan push contract -f "data_contracts/"
         env:
