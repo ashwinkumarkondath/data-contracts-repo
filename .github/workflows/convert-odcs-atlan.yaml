@@ -89,7 +89,6 @@ jobs:
 
 
       - name: Validate contracts (CLI)
-        working-directory: $GITHUB_WORKSPACE
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
