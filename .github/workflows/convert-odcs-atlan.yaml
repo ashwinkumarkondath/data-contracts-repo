@@ -78,7 +78,6 @@ jobs:
           CONFIG_FILE: config.yaml
 
       - name: Configure CLI with tenant URL and data source
-        working-directory: data-contracts-repo
         run: |
           mkdir -p .atlan
           cp $CONFIG_FILE .atlan/config.yaml
@@ -90,7 +89,6 @@ jobs:
           CONFIG_FILE: config.yaml 
 
       - name: Validate contracts (CLI)
-        working-directory: data-contracts-repo
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
@@ -102,19 +100,16 @@ jobs:
       - name: Upload validation log
         uses: actions/upload-artifact@v4
         with:
-          working-directory: data-contracts-repo
           name: validation-logs
           path: validation_log_*.txt 
 
       - name: Push contracts to Atlan (draft)
-        working-directory: data-contracts-repo
         run: |
           atlan push contract -f "data_contracts/"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
       - name: Publish contracts to Atlan
-        working-directory: data-contracts-repo
         run: |
           # Update status from draft to verified before publishing
           find "data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
