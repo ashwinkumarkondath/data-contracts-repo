@@ -28,13 +28,7 @@ jobs:
   publish-contracts:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout validation repo
-        uses: actions/checkout@v4
-        with:
-          repository: ashwinkumarkondath/data-contracts-repo
-          path: data-contracts-repo
-        
+    steps:      
       - name: Checkout caller repo
         uses: actions/checkout@v4
         with:
@@ -44,6 +38,11 @@ jobs:
           path: caller-repo
           sparse-checkout: |
             ${{ inputs.input-path }}
+      - name: Checkout validation repo
+        uses: actions/checkout@v4
+        with:
+          repository: ashwinkumarkondath/data-contracts-repo
+          path: data-contracts-repo
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -78,7 +77,6 @@ jobs:
           OUTPUT_DIR: ${{ github.workspace }}/data_contracts
 
       - name: Configure CLI with tenant URL and data source
-        working-directory: ${{ github.workspace }}
         run: |
           mkdir -p .atlan
           cp config.yaml .atlan/
