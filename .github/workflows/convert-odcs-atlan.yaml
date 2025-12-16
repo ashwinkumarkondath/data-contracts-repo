@@ -74,7 +74,8 @@ jobs:
             ../caller-repo/${{ inputs.input-path }}
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
-          ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
+          ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
+          OUTPUT_DIR: ${{ github.workspace }}/data_contracts
 
       - name: Configure CLI with tenant URL and data source
         working-directory: data-contracts-repo
