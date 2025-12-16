@@ -78,7 +78,7 @@ jobs:
           OUTPUT_DIR: ${{ github.workspace }}/data_contracts
 
       - name: Configure CLI with tenant URL and data source
-        working-directory: data-contracts-repo
+        working-directory: ${{ github.workspace }}
         run: |
           mkdir -p .atlan
           cp config.yaml .atlan/
