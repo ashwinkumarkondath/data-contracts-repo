@@ -167,7 +167,8 @@ def process_sla(odcs, mappings, contracts_by_asset):
                 cur[parts[-1]] = val
         contracts_by_asset[asset_name]["sla"].append(sla_obj)
 
-def run(odcs_file, mapping_file, output_dir="data_contracts"):
+def run(odcs_file, mapping_file):
+    output_dir = os.environ.get("OUTPUT_DIR", "data_contracts")
     os.makedirs(output_dir, exist_ok=True)
 
     with open(odcs_file, "r", encoding="utf-8") as f:
