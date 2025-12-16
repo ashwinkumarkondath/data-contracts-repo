@@ -201,8 +201,8 @@ def run(odcs_file, mapping_file):
             yaml.dump(contract, f, sort_keys=False) 
         print(f"Generated: {output_path}")
 
-def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, output_config_path='config.yaml'):
-
+def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name):
+    CONFIG_FILE = os.environ.get("CONFIG_FILE", "config.yaml")
     if not q_name or not conn_name:
         print(f"Missing 'physicalName' or 'connection_name' in {input_yaml_path}")
         return
@@ -230,8 +230,8 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
         }
     }
 
-    if os.path.exists(output_config_path):
-        with open(output_config_path, 'r') as f:
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
             try:
                 existing_config = yaml.safe_load(f) or {}
             except yaml.YAMLError:
@@ -241,10 +241,10 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
 
     existing_config.update(new_entry)
 
-    with open(output_config_path, 'w') as f:
+    with open(CONFIG_FILE, 'w') as f:
         yaml.dump(existing_config, f, default_flow_style=False)
 
-    print(f"Updated config written to {output_config_path} for asset {table_name}")
+    print(f"Updated config written to {CONFIG_FILE} for asset {table_name}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Validate a YAML file against a JSON Schema.")
