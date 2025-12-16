@@ -140,7 +140,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # IMPORTANT: workflow FILE name (in .github/workflows), not the display name
-          workflow: odcs-atlan-test.yaml   # <--- change if your file name differs
+          workflow: convert-odcs-atlan.yaml   # <--- change if your file name differs
           workflow_conclusion: success
           name: contracts-hashes
           path: previous-hash
@@ -153,8 +153,8 @@ jobs:
         run: |
           set -e
           CONTRACT_DIR="data-contracts-repo/data_contracts"
-          CURRENT_HASHES="contracts_hashes.txt"
-          PREV_HASHES="previous-hash/contracts_hashes.txt"
+          CURRENT_HASHES="data-contracts-repo/contracts_hashes.txt"
+          PREV_HASHES="data-contracts-repo/previous-hash/contracts_hashes.txt"
 
           if [ ! -f "$CURRENT_HASHES" ]; then
             echo "No current hashes file found."
