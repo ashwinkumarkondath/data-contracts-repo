@@ -75,9 +75,10 @@ jobs:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
           OUTPUT_DIR: ${{ github.workspace }}/data_contracts
-          CONFIG_FILE: ${{ github.workspace }}/config.yaml
+          CONFIG_FILE: data-contracts-repo/config.yaml
 
       - name: Configure CLI with tenant URL and data source
+        working-directory: data-contracts-repo
         run: |
           mkdir -p .atlan
           cp config.yaml .atlan/
