@@ -90,6 +90,7 @@ jobs:
           CONFIG_FILE: config.yaml 
 
       - name: Validate contracts (CLI)
+        working-directory: data-contracts-repo
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
