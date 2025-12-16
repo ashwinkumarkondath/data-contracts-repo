@@ -110,6 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: validation-logs
+          working-directory: data-contracts-repo
           path: validation_log_*.txt 
 
       - name: Push contracts to Atlan (draft)
@@ -120,6 +121,7 @@ jobs:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
 
       - name: Publish contracts to Atlan
+        working-directory: data-contracts-repo
         run: |
           # Update status from draft to verified before publishing
           find "data_contracts/" -type f -name "*.yaml" -exec sed -i 's/status: draft/status: verified/g' {} \;
