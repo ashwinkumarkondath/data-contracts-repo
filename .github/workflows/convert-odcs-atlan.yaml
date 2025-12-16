@@ -78,7 +78,7 @@ jobs:
           CONFIG_FILE: ${{ github.workspace }}/config.yaml
 
       - name: Configure CLI with tenant URL and data source
-        working-directory: $GITHUB_WORKSPACE
+        working-directory:  ${{ github.workspace }}
         run: |
           mkdir -p .atlan
           cp $CONFIG_FILE .atlan/
@@ -91,7 +91,7 @@ jobs:
 
 
       - name: Validate contracts (CLI)
-        working-directory: $GITHUB_WORKSPACE
+        working-directory:  ${{ github.workspace }}
         run: |
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           # Run validation and capture output to a timestamped log file
