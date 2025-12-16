@@ -87,6 +87,7 @@ jobs:
           cat .atlan/config.yaml
         env:
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}
+          CONFIG_FILE: config.yaml 
 
       - name: Validate contracts (CLI)
         working-directory: data-contracts-repo
