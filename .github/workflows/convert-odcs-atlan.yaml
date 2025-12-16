@@ -112,6 +112,81 @@ jobs:
           name: validation-logs
           working-directory: data-contracts-repo
           path: validation_log_*.txt 
+          
+       # ========== PER-FILE HASHING & CHANGE DETECTION ==========
+
+      - name: Compute current contract hashes
+        id: compute-hashes
+        run: |
+          set -e
+          CONTRACT_DIR="data-contracts-repo/data_contracts"
+
+          if [ ! -d "$CONTRACT_DIR" ]; then
+            echo "Contract directory not found: $CONTRACT_DIR"
+            exit 1
+          fi
+
+          # One line per file: "<hash>  <fullpath>"
+          find "$CONTRACT_DIR" -type f -name '*.yaml' -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > contracts_hashes.txt
+
+          echo "Current contract hashes:"
+          cat contracts_hashes.txt
+
+      - name: Download previous contracts hashes artifact
+        id: download-prev-hashes
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # IMPORTANT: workflow FILE name (in .github/workflows), not the display name
+          workflow: odcs-atlan-test.yaml   # <--- change if your file name differs
+          workflow_conclusion: success
+          name: contracts-hashes
+          path: previous-hash
+          allow_forks: false
+          if_no_artifact_found: ignore
+        continue-on-error: true
+
+      - name: Determine changed contract files
+        id: diff-contracts
+        run: |
+          set -e
+          CONTRACT_DIR="data-contracts-repo/data_contracts"
+          CURRENT_HASHES="contracts_hashes.txt"
+          PREV_HASHES="previous-hash/contracts_hashes.txt"
+
+          if [ ! -f "$CURRENT_HASHES" ]; then
+            echo "No current hashes file found."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # If no previous hashes, treat ALL files as changed
+          if [ ! -f "$PREV_HASHES" ]; then
+            echo "No previous hashes found, treating all contracts as changed."
+            awk '{print $2}' "$CURRENT_HASHES" > changed_files.txt
+          else
+            > changed_files.txt
+            # Compare current vs previous hashes per full path
+            while read -r curr_hash curr_path; do
+              prev_hash=$(grep -F "  $curr_path" "$PREV_HASHES" | awk '{print $1}' || true)
+              if [ "$prev_hash" != "$curr_hash" ]; then
+                echo "$curr_path" >> changed_files.txt
+              fi
+            done < "$CURRENT_HASHES"
+          fi
+
+          if [ -s changed_files.txt ]; then
+            echo "Changed contracts:"
+            cat changed_files.txt
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No contract changes detected."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ========== PUSH ONLY CHANGED CONTRACTS (DRAFT → VERIFIED) ==========
 
       - name: Push contracts to Atlan (draft)
         working-directory: data-contracts-repo
