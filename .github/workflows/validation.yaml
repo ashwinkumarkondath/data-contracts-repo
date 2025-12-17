@@ -41,4 +41,4 @@ jobs:
         run: |
           PYTHON_SCRIPT_INPUT_PATH="./contracts/R7 Source Aligned.yaml"
           echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"       
-          python scripts/validate-odcs-template.py $PYTHON_SCRIPT_INPUT_PATH 
+          python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" 
