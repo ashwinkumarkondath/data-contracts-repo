@@ -25,7 +25,7 @@ jobs:
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
           sparse-checkout: |
-            Order_stats.yaml            
+            "R7 Source Aligned.yaml"            
     
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -39,6 +39,6 @@ jobs:
           
       - name: Run Python Script with Input File
         run: |
-          PYTHON_SCRIPT_INPUT_PATH=./contracts/Order_stats.yaml
+          PYTHON_SCRIPT_INPUT_PATH="./contracts/R7 Source Aligned.yaml"
           echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"       
           python scripts/validate-odcs-template.py $PYTHON_SCRIPT_INPUT_PATH 
