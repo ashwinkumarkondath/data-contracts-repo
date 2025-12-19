@@ -44,7 +44,7 @@ jobs:
           
       - name: Execute the script
         run: |
-          PYTHON_SCRIPT_INPUT_PATH="./contracts/R7 Source Aligned.yaml"
+          PYTHON_SCRIPT_INPUT_PATH="./contracts/odcs_template.yaml"
           python scripts/convert-odcs-atlan.py "$PYTHON_SCRIPT_INPUT_PATH"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
