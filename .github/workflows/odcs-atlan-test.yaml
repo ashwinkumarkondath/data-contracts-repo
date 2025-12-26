@@ -26,8 +26,14 @@ jobs:
           repository: Flo891/dc_test 
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
-          sparse-checkout: |
-            "R7 Source Aligned.yaml"   
+            
+      - name: Find YAML files in root
+        id: find_yaml
+        run: |
+          files=$(find contracts -maxdepth 1 -type f \( -name "*.yaml" -o -name "*.yml" \))
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$files" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -53,7 +59,9 @@ jobs:
           
       - name: Execute the script (ODCS → Atlan)
         run: |
-          PYTHON_SCRIPT_INPUT_PATH="./contracts/R7 Source Aligned.yaml"
+          for file in ${{ steps.find_yaml.outputs.files }}; do
+            echo "Processing $file"
+            PYTHON_SCRIPT_INPUT_PATH="$file"
           python scripts/convert-odcs-atlan.py "$PYTHON_SCRIPT_INPUT_PATH"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
