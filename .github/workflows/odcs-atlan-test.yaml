@@ -62,7 +62,7 @@ jobs:
           for file in ${{ steps.find_yaml.outputs.files }}; do
             echo "Processing $file"
             PYTHON_SCRIPT_INPUT_PATH="$file"
-          python scripts/convert-odcs-atlan.py "$PYTHON_SCRIPT_INPUT_PATH"
+            python scripts/convert-odcs-atlan.py "$PYTHON_SCRIPT_INPUT_PATH"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
