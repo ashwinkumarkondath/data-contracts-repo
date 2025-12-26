@@ -1,10 +1,7 @@
 name: ODCS contracts using Atlan CLI
 
 on:
-  workflow_run:
-    workflows: ["Validation Workflow"]
-    types:
-      - completed
+  workflow_dispatch: {}
 
 env:
   ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
