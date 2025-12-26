@@ -23,8 +23,7 @@ jobs:
       - name: Clone/Fetch File from Repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.client_payload.source_repo }}
-          ref: ${{ github.event.client_payload.sha }}
+          repository: ${{ github.event.client_payload.source_repos }}
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
 
