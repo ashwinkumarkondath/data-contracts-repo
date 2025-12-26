@@ -48,7 +48,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_READ_TOKEN }}
-          repository: ${{ github.event.workflow_run.repository.full_name }}
+          repository: ${{ github.event.client_payload.source_repo }}
           event-type: publish-contract_trigger
           client-payload: |
             {
