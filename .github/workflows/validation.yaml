@@ -52,7 +52,6 @@ jobs:
           event-type: publish-contract_trigger
           client-payload: |
             {
-              "source_repo": "${{ github.event.client_payload.source_repo }}",
-              "sha": "${{ github.event.client_payload.sha }}"
+              "source_repos": "${{ github.event.client_payload.source_repo }}"
             }
 
