@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ github.event.client_payload.source_repo }}
+          ref: ${{ github.event.client_payload.sha }}
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
 
