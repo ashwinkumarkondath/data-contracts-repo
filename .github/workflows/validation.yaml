@@ -21,11 +21,9 @@ jobs:
       - name: Clone/Fetch File from Repo
         uses: actions/checkout@v4
         with:
-          repository: Flo891/dc_test 
+          repository: ${{ github.event.workflow_run.repository.full_name }}
           path: contracts                      
-          token: ${{ secrets.REPO_READ_TOKEN }} 
-          sparse-checkout: |
-            "R7 Source Aligned.yaml"            
+          token: ${{ secrets.REPO_READ_TOKEN }}            
     
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -39,6 +37,9 @@ jobs:
           
       - name: Run Python Script with Input File
         run: |
-          PYTHON_SCRIPT_INPUT_PATH="./contracts/R7 Source Aligned.yaml"
-          echo "Input file path is: $PYTHON_SCRIPT_INPUT_PATH"       
-          python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" 
+          find contracts -maxdepth 1 -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 |
+          while IFS= read -r -d '' file; do
+            echo "Processing: $file"
+            PYTHON_SCRIPT_INPUT_PATH="$file"      
+            python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" 
+          done
