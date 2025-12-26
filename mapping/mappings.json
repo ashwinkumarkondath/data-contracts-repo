@@ -1,28 +1,31 @@
 {
   "mappings": [
     { "ODCS_Path": "kind", "Atlan_Path": "kind" },
+    { "ODCS_Path": "status", "Atlan_Path": "status", "New_Value": {"active" : "verified", "draft" : "Draft", "inactive" : "Inactive" }, "Default_Value" : "Draft" },
     { "ODCS_Path": "version", "Atlan_Path": "template_version", "New_Value": "0.0.2" },
-    { "ODCS_Path": "schema[].name", "Atlan_Path": "data_source", "Case_Func": "lower"},
+    { "ODCS_Path": "schema[].name", "Atlan_Path": "data_source", "Case_Func": "Lower"},
 
-    { "ODCS_Path": "schema[].name", "Atlan_Path": "dataset" },
-    { "ODCS_Path": "status", "Atlan_Path": "status", "New_Value": {"active" : "verified", "draft" : "draft", "inactive" : "Inactive" }, "Default_Value" : "Draft" },
-
-    { "ODCS_Path": "description.purpose", "Atlan_Path": "description" },
-
-    { "ODCS_Path": "schema[].physicalName", "Atlan_Path": "assets[]" },
-    { "ODCS_Path": "schema[].physicalName", "Atlan_Path": "assetQualifiedName" },
-
+    { "ODCS_Path": "schema[].name", "Atlan_Path": "dataset"},
     { "ODCS_Path": "schema[].physicalType", "Atlan_Path": "type" },
+    
+    { "ODCS_Path": "description.purpose", "Atlan_Path": "description" },
+    { "ODCS_Path": "team[].username", "Atlan_Path": "owners.users[]" },
+    { "ODCS_Path": "team[].groupname", "Atlan_Path": "owners.groups[]" },
 
-    { "ODCS_Path": "schema[].properties[].name", "Atlan_Path": "expectations.schema[].column" },
-    { "ODCS_Path": "schema[].properties[].physicalType", "Atlan_Path": "expectations.schema[].type" },
-    { "ODCS_Path": "schema[].properties[].required", "Atlan_Path": "expectations.schema[].required", "Index": 0},
+    { "ODCS_Path": "tags[]", "Atlan_Path": "tags[]", "Tag": "tag_name" },
 
-    { "ODCS_Path": "schema[].properties[].quality", "Atlan_Path": "expectations.quality[]", "Level": "column"},
-    { "ODCS_Path": "schema[].quality[]", "Atlan_Path": "expectations.table_rule[]", "Level": "table" },
+    { "ODCS_Path": "schema[].quality[]", "Atlan_Path": "custom_metadata.Metadata.quality", "Level": "table"},
+    { "ODCS_Path": "slaProperties[]", "Atlan_Path": "custom_metadata.Metadata.sla"},
 
-    { "ODCS_Path": "slaProperties[].property", "Atlan_Path": "sla.freshness.property"}
+    { "ODCS_Path": "schema[].properties[].name", "Atlan_Path": "columns[].name" },
+    { "ODCS_Path": "schema[].properties[].physicalType", "Atlan_Path": "columns[].data_type" },
+    { "ODCS_Path": "schema[].properties[].primaryKey", "Atlan_Path": "columns[].primary" },
+    { "ODCS_Path": "schema[].properties[].required", "Atlan_Path": "columns[].required"},
+    { "ODCS_Path": "schema[].properties[].unique", "Atlan_Path": "columns[].unique" },
+    { "ODCS_Path": "schema[].properties[].tags", "Atlan_Path": "columns[].tags[]"},
+
+    { "ODCS_Path": "schema[].properties[].quality", "Atlan_Path": "columns[].custom_metadata.quality"}
+    
 
   ]
 }
- 
