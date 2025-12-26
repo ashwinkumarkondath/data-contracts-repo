@@ -43,3 +43,16 @@ jobs:
             PYTHON_SCRIPT_INPUT_PATH="$file"      
             python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" 
           done
+
+      - name: Trigger publish-contract
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_READ_TOKEN }}
+          repository: ${{ github.event.workflow_run.repository.full_name }}
+          event-type: publish-contract_trigger
+          client-payload: |
+            {
+              "source_repo": "${{ github.event.client_payload.source_repo }}"
+              "sha": "${{ github.event.client_payload.sha }}"
+            }
+
