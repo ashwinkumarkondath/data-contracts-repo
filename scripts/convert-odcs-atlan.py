@@ -222,7 +222,8 @@ def extract_and_append_config(input_yaml_path, table_name, q_name, conn_name, ou
 
 # ---------------- Runner ----------------
 
-def run(odcs_file, mapping_file, output_dir="data_contracts_output"):
+def run(odcs_file, mapping_file):
+    output_dir = os.environ.get("OUTPUT_DIR", "data_contracts")
     os.makedirs(output_dir, exist_ok=True)
 
     with open(odcs_file, "r", encoding="utf-8") as f:
@@ -255,15 +256,10 @@ def run(odcs_file, mapping_file, output_dir="data_contracts_output"):
         process_sla(asset, mappings, contracts_by_asset)
 
     for asset_name, contract in contracts_by_asset.items():
-        if data_prod:
-            f_path = os.path.join(output_dir, data_prod)
-            path = os.path.join(f_path, f"{asset_name}.yml")
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                yaml.dump(contract, f, sort_keys=False)
-            print(f"Generated: {path}")
-        else:
-            print(f"Data Product is missing from the odcs - {asset_name}")
+        path = os.path.join(output_dir, f"{asset_name}.yml")
+        with open(path, "w", encoding="utf-8") as f:
+            yaml.dump(contract, f, sort_keys=False)
+        print(f"Generated: {path}")
 
 # ---------------- Main ----------------
 
