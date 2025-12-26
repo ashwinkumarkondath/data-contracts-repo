@@ -1,7 +1,7 @@
 {
   "mappings": [
     { "ODCS_Path": "kind", "Atlan_Path": "kind" },
-    { "ODCS_Path": "status", "Atlan_Path": "status", "New_Value": {"active" : "verified", "draft" : "draft", "inactive" : "Inactive" }, "Default_Value" : "Draft" },
+    { "ODCS_Path": "status", "Atlan_Path": "status", "New_Value": {"active" : "verified", "draft" : "draft", "inactive" : "Inactive" }, "Default_Value" : "draft" },
     { "ODCS_Path": "version", "Atlan_Path": "template_version", "New_Value": "0.0.2" },
     { "ODCS_Path": "schema[].name", "Atlan_Path": "data_source", "Case_Func": "Lower"},
 
