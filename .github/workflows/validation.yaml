@@ -48,10 +48,10 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_READ_TOKEN }}
-          repository: ${{ github.event.client_payload.source_repo }}
+          repository: ashwinkumarkondath/data-contracts-repo
           event-type: publish-contract_trigger
           client-payload: |
             {
-              "source_repos": "${{ github.event.client_payload.source_repo }}"
+              "source_repo": "${{ github.event.client_payload.source_repo }}"
             }
 
