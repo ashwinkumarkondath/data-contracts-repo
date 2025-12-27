@@ -41,5 +41,5 @@ jobs:
           while IFS= read -r -d '' file; do
             echo "Processing: $file"
             PYTHON_SCRIPT_INPUT_PATH="$file"      
-            python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" 
+            python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" "mapping/yaml-validation.json"
           done
