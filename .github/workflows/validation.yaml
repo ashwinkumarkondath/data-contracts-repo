@@ -9,6 +9,10 @@ on:
   pull_request:
     branches:
       - main
+env:
+  SCRIPT_PATH: "scripts/validate-odcs-template.py"
+  SCHEMA_FILE: "mapping/yaml-validation.json"
+
 jobs:
   run-script:
     runs-on: ubuntu-latest
@@ -41,5 +45,5 @@ jobs:
           while IFS= read -r -d '' file; do
             echo "Processing: $file"
             PYTHON_SCRIPT_INPUT_PATH="$file"      
-            python scripts/validate-odcs-template.py "$PYTHON_SCRIPT_INPUT_PATH" "mapping/yaml-validation.json"
+            python ${{ env.SCRIPT_PATH }} "$PYTHON_SCRIPT_INPUT_PATH" "${{ env.SCHEMA_FILE}}"
           done
