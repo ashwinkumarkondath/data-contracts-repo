@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout 
         uses: actions/checkout@v4
 
       - name: Clone/Fetch File from Repo
         uses: actions/checkout@v4
         with:
-          repository: Flo891/dc_test 
+          repository: ${{ github.event.client_payload.source_repo }}
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
 
