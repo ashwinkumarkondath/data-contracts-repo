@@ -1,8 +1,10 @@
 name: ODCS contracts using Atlan test CLI
 
 on:
-  repository_dispatch:
-    types: [publish-contract_trigger]
+  workflow_run:
+    workflows: ["Validation Workflow"]
+    types:
+      - completed
 
 env:
   ATLAN_BINARY_URL: "https://github.com/atlanhq/atlan-cli-releases/releases/latest/download/atlan_Linux_amd64.tar.gz"
@@ -10,15 +12,28 @@ env:
 
 jobs:
   publish-contracts:
+    # Only run when "Validation Workflow" completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Clone/Fetch File from Repo
         uses: actions/checkout@v4
         with:
-          repository: Flo891/dc_test
+          repository: Flo891/dc_test 
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }} 
+            
+      - name: Find YAML files in root
+        id: find_yaml
+        run: |
+          files=$(find contracts -maxdepth 1 -type f \( -name "*.yaml" -o -name "*.yml" \))
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$files" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,12 +59,10 @@ jobs:
           
       - name: Execute the script (ODCS → Atlan)
         run: |
-          find contracts -maxdepth 1 -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 |
-          while IFS= read -r -d '' file; do
-            echo "Processing: $file"
+          for file in ${{ steps.find_yaml.outputs.files }}; do
+            echo "Processing $file"
             PYTHON_SCRIPT_INPUT_PATH="$file"
-            python scripts/convert-odcs-atlan.py "$PYTHON_SCRIPT_INPUT_PATH"
-          done
+          python scripts/convert-odcs-atlan.py "$PYTHON_SCRIPT_INPUT_PATH"
         env:
           ATLAN_API_KEY: ${{ secrets.ATLAN_API_KEY }}
           ATLAN_BASE_URL: ${{ secrets.ATLAN_BASE_URL }}   
