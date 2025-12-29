@@ -25,7 +25,7 @@ jobs:
       - name: Clone/Fetch File from Repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.client_payload.source_repo }}
+          repository: Flo891/dc_test
           path: contracts                      
           token: ${{ secrets.REPO_READ_TOKEN }}            
     
